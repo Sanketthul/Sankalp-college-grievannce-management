@@ -10,44 +10,52 @@ function Login() {
   function onSubmit(e) {
     e.preventDefault();
 
-    // const usrdata = {
-    //   uname: username,
-    //   pass: pass,
-    // };
-
     fetch("http://localhost:8000/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ uname: username, pass: pass }),
+      body: JSON.stringify({
+        uname: username,
+        pass: pass,
+      }),
     })
-      .then((res) => {
-        console.log(res);
-        if (res.status == 200) {
-          alert("Welcome student !!");
-          window.sessionStorage.setItem("username", username);
-          navigate("/student");
-        } else if (res.status == 201) {
-          alert("Welcome Admin");
-          window.sessionStorage.setItem("username", username);
-          navigate("/admin");
-        } else if (res.status == 202) {
-          alert("Welcome Resolver");
-          window.sessionStorage.setItem("username", username);
-          navigate("/resolver");
+      .then(async (res) => {
+        const data = await res.json();
+
+        if (res.status === 200) {
+          sessionStorage.setItem("token", data.token);
+
+          sessionStorage.setItem("username", data.user.username);
+
+          sessionStorage.setItem("role", data.user.role);
+
+          sessionStorage.setItem("uid", data.user.uid);
+
+          if (data.user.role === "Admin") {
+            alert("Welcome Admin");
+            navigate("/admin");
+          } else if (data.user.role === "Resolver") {
+            alert("Welcome Resolver");
+            navigate("/resolver");
+          } else if (data.user.role === "Student") {
+            alert("Welcome student !!");
+            navigate("/student");
+          } else {
+            alert("Invalid user role.");
+          }
         } else {
-          alert("Invalid Username or password");
+          alert(data.message || "Invalid Username or password");
         }
       })
       .catch((err) => {
-        console.log(err);
+        console.error("Login error:", err);
+        alert("Unable to connect to server.");
       });
   }
 
   return (
     <div>
-      
       <div className="h-screen md:flex">
         <div className="relative overflow-hidden md:flex w-1/2 bg-gradient-to-tr from-blue-800 to-purple-700 i justify-around items-center hidden">
           <div>
