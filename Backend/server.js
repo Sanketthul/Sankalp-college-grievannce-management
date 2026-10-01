@@ -24,7 +24,11 @@ const PORT = process.env.PORT || 8000;
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
-//middleware
+const {
+  validate,
+  registerValidation,
+  loginValidation,
+} = require("./Middleware/validation");
 
 app.use(
   cors({
@@ -44,8 +48,6 @@ app.use(
   }),
 );
 
-//database
-
 mongoose
   .connect(process.env.DBURL)
   .then(() => {
@@ -55,11 +57,11 @@ mongoose
     console.error("Database connection failed:", error.message);
   });
 
-//models
-
 const user_model = require("./Model/register");
 
 const Complaint_model = require("./Model/complaint");
+
+//auth middleware
 
 const {
   authenticateToken,
@@ -68,153 +70,184 @@ const {
   requireStudent,
 } = require("./Middleware/auth");
 
-//complaint
-
 const ComplaintRoutes = require("./Routes/complaints");
 
 app.use("/", ComplaintRoutes);
 
 //register
 
-app.post("/register", async (req, res) => {
-  try {
-    const { username, password, role, name, email, uid, adminSecret } =
-      req.body;
+app.post(
+  "/register",
 
-    if (!username || !password || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "Username, password and role are required.",
+  registerValidation,
+
+  validate,
+
+  async (req, res) => {
+    try {
+      const {
+        username,
+        password,
+        role,
+        name,
+        email,
+        uid,
+        adminSecret,
+        adminSecretKey,
+        pass,
+      } = req.body;
+
+      const finalPassword = password || pass;
+
+      if (role === "Admin") {
+        const suppliedAdminSecret = adminSecretKey || adminSecret;
+
+        if (suppliedAdminSecret !== process.env.ADMIN_SECRET_KEY) {
+          return res.status(403).json({
+            success: false,
+            message: "Invalid admin secret key.",
+          });
+        }
+      }
+
+      const existingUser = await user_model.findOne({
+        $or: [
+          {
+            username: username,
+          },
+          {
+            email: email,
+          },
+          {
+            uid: uid,
+          },
+        ],
       });
-    }
 
-    if (role === "Admin") {
-      if (adminSecret !== process.env.ADMIN_SECRET_KEY) {
-        return res.status(403).json({
+      if (existingUser) {
+        return res.status(409).json({
           success: false,
-          message: "Invalid admin secret key.",
+          message: "Username, email or UID already exists.",
         });
       }
-    }
 
-    const existingUser = await user_model.findOne({
-      username: username,
-    });
+      const hashedPassword = await bcrypt.hash(finalPassword, 10);
 
-    if (existingUser) {
-      return res.status(409).json({
+      const newUser = new user_model({
+        username: username.trim(),
+
+        password: hashedPassword,
+
+        role: role.trim(),
+
+        name: name.trim(),
+
+        email: email.trim().toLowerCase(),
+
+        uid: uid.trim(),
+      });
+
+      await newUser.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Registration successful.",
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+
+      return res.status(500).json({
         success: false,
-        message: "Username already exists.",
+        message: "Unable to register user.",
       });
     }
+  },
+);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+//login
 
-    const newUser = new user_model({
-      username: username,
+app.post(
+  "/login",
 
-      password: hashedPassword,
+  loginValidation,
 
-      role: role,
+  validate,
 
-      name: name || "",
+  async (req, res) => {
+    try {
+      const { uname, pass } = req.body;
 
-      email: email || "",
+      const username = uname.trim();
 
-      uid: uid || "",
-    });
+      const doc = await user_model.findOne({
+        username: username,
+      });
 
-    await newUser.save();
+      if (!doc) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid username or password.",
+        });
+      }
 
-    res.status(201).json({
-      success: true,
-      message: "Registration successful.",
-    });
-  } catch (error) {
-    console.error("Registration error:", error);
+      const passwordMatch = await bcrypt.compare(pass, doc.password);
 
-    res.status(500).json({
-      success: false,
-      message: "Unable to register user.",
-    });
-  }
-});
+      if (!passwordMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid username or password.",
+        });
+      }
 
-app.post("/login", async (req, res) => {
-  try {
-    const { uname, pass } = req.body;
+      //jwt
 
-    if (!uname || !pass) {
-      return res.status(400).json({
+      const token = jwt.sign(
+        {
+          userId: doc._id.toString(),
+
+          username: doc.username,
+
+          uid: doc.uid,
+
+          role: doc.role,
+        },
+
+        process.env.JWT_SECRET,
+
+        {
+          expiresIn: "2h",
+        },
+      );
+
+      return res.status(200).json({
+        success: true,
+
+        message: "Login successful.",
+
+        token,
+
+        user: {
+          username: doc.username,
+
+          name: doc.name,
+
+          uid: doc.uid,
+
+          role: doc.role,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+
+      return res.status(500).json({
         success: false,
-        message: "Username and password are required.",
+        message: "Server error during login.",
       });
     }
+  },
+);
 
-    const doc = await user_model.findOne({
-      username: uname,
-    });
-
-    if (!doc) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid username or password.",
-      });
-    }
-
-    const passwordMatch = await bcrypt.compare(pass, doc.password);
-
-    if (!passwordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid username or password.",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        userId: doc._id.toString(),
-
-        username: doc.username,
-
-        uid: doc.uid,
-
-        role: doc.role,
-      },
-
-      process.env.JWT_SECRET,
-
-      {
-        expiresIn: "2h",
-      },
-    );
-
-    res.status(200).json({
-      success: true,
-
-      message: "Login successful.",
-
-      token,
-
-      user: {
-        username: doc.username,
-
-        name: doc.name,
-
-        uid: doc.uid,
-
-        role: doc.role,
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error during login.",
-    });
-  }
-});
+//student history
 
 app.get(
   "/history",
@@ -229,14 +262,14 @@ app.get(
         uid: req.user.uid,
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: data,
       });
     } catch (error) {
       console.error("History error:", error);
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: "Unable to fetch complaint history.",
       });
@@ -244,9 +277,13 @@ app.get(
   },
 );
 
+//error handler
+
 const errorHandler = require("./Middleware/errorHandler");
 
 app.use(errorHandler);
+
+//server
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

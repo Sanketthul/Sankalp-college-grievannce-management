@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -9,46 +10,72 @@ const {
 } = require("../Middleware/auth");
 
 const Complaint = require("../Model/complaint");
+
 const User = require("../Model/register");
 
-//student complaints
+// =====================================================
+// STUDENT - CREATE COMPLAINT
+// =====================================================
 
 router.post(
   "/complaints",
+
   authenticateToken,
+
   requireStudent,
+
   async (req, res) => {
     try {
       const complaint = await Complaint.create({
+        // IMPORTANT:
+        // These come from JWT, NOT from frontend.
         username: req.user.username,
+
         uid: req.user.uid,
 
         incharge_name: req.body.p_incharge,
+
         branch: req.body.branch,
+
         complaint: req.body.complaint,
+
         date: req.body.date,
+
         time: req.body.time,
 
         status: "Pending",
       });
 
-      res.status(201).json(complaint);
+      return res.status(201).json({
+        success: true,
+
+        message: "Complaint created successfully.",
+
+        complaint,
+      });
     } catch (err) {
       console.error("Create complaint error:", err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message: "Unable to create complaint.",
       });
     }
   },
 );
 
-//admin get complaints
+// =====================================================
+// ADMIN - GET COMPLAINTS
+// =====================================================
 
 router.get(
   "/admin/complaints",
+
   authenticateToken,
+
   requireAdmin,
+
   async (req, res) => {
     try {
       const { status = "All", search = "" } = req.query;
@@ -59,27 +86,43 @@ router.get(
         query.status = status;
       }
 
-      //search
-
       if (search.trim()) {
         const searchRegex = {
           $regex: search.trim(),
+
           $options: "i",
         };
 
         query.$or = [
-          { username: searchRegex },
-          { uid: searchRegex },
-          { complaint: searchRegex },
-          { branch: searchRegex },
-          { incharge_name: searchRegex },
-          { assignedResolver: searchRegex },
+          {
+            username: searchRegex,
+          },
+
+          {
+            uid: searchRegex,
+          },
+
+          {
+            complaint: searchRegex,
+          },
+
+          {
+            branch: searchRegex,
+          },
+
+          {
+            incharge_name: searchRegex,
+          },
+
+          {
+            assignedResolver: searchRegex,
+          },
         ];
       }
 
-      const complaints = await Complaint.find(query).sort({ createdAt: -1 });
-
-      //stats
+      const complaints = await Complaint.find(query).sort({
+        createdAt: -1,
+      });
 
       const total = await Complaint.countDocuments();
 
@@ -105,83 +148,121 @@ router.get(
         },
       });
 
-      res.json({
+      return res.json({
+        success: true,
+
         complaints,
 
         stats: {
           total,
+
           pending,
+
           inProgress,
+
           resolved,
+
           rejected,
+
           assigned,
         },
       });
     } catch (err) {
       console.error("Admin complaints error:", err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message: "Unable to fetch complaints.",
       });
     }
   },
 );
 
-//admin resolvers
+// =====================================================
+// ADMIN - GET RESOLVERS
+// =====================================================
 
 router.get(
   "/admin/resolvers",
+
   authenticateToken,
+
   requireAdmin,
+
   async (req, res) => {
     try {
       const resolvers = await User.find(
         {
           role: "Resolver",
         },
+
         {
           name: 1,
+
           username: 1,
+
           uid: 1,
+
           email: 1,
         },
       ).sort({
         name: 1,
       });
 
-      res.json(resolvers);
+      return res.json({
+        success: true,
+
+        resolvers,
+      });
     } catch (err) {
       console.error("Get resolvers error:", err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message: "Unable to fetch resolvers.",
       });
     }
   },
 );
 
-//admin assign
+// =====================================================
+// ADMIN - ASSIGN RESOLVER / CHANGE STATUS
+// =====================================================
 
 router.put(
   "/admin/complaints/:id",
+
   authenticateToken,
+
   requireAdmin,
+
   async (req, res) => {
     try {
-      const { assignedResolver, assignedResolverUid, status } = req.body;
+      const { assignedResolver, status } = req.body;
 
       const updateData = {};
+
+      // -------------------------------------------------
+      // STATUS
+      // -------------------------------------------------
 
       if (status !== undefined) {
         const allowedStatuses = [
           "Pending",
+
           "In Progress",
+
           "Resolved",
+
           "Rejected",
         ];
 
         if (!allowedStatuses.includes(status)) {
           return res.status(400).json({
+            success: false,
+
             message: "Invalid complaint status.",
           });
         }
@@ -189,18 +270,26 @@ router.put(
         updateData.status = status;
       }
 
+      // -------------------------------------------------
+      // RESOLVER
+      // -------------------------------------------------
+
       if (assignedResolver !== undefined) {
         if (assignedResolver === "") {
           updateData.assignedResolver = null;
+
           updateData.assignedResolverUid = null;
         } else {
           const resolver = await User.findOne({
             username: assignedResolver,
+
             role: "Resolver",
           });
 
           if (!resolver) {
             return res.status(404).json({
+              success: false,
+
               message: "Resolver not found.",
             });
           }
@@ -213,39 +302,54 @@ router.put(
 
       const updatedComplaint = await Complaint.findByIdAndUpdate(
         req.params.id,
+
         updateData,
+
         {
           new: true,
+
           runValidators: true,
         },
       );
 
       if (!updatedComplaint) {
         return res.status(404).json({
+          success: false,
+
           message: "Complaint not found.",
         });
       }
 
-      res.json({
+      return res.json({
+        success: true,
+
         message: "Complaint updated successfully.",
+
         complaint: updatedComplaint,
       });
     } catch (err) {
       console.error("Admin complaint update error:", err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message: "Unable to update complaint.",
       });
     }
   },
 );
 
-//resolver
+// =====================================================
+// RESOLVER - UPDATE COMPLAINT
+// =====================================================
 
 router.put(
   "/complaints",
+
   authenticateToken,
+
   requireResolver,
+
   async (req, res) => {
     try {
       const { complaintID, comments, status } = req.body;
@@ -254,42 +358,64 @@ router.put(
 
       if (!complaint) {
         return res.status(404).json({
+          success: false,
+
           message: "Complaint not found.",
         });
       }
 
-      // Resolver can only modify complaints
-      // assigned to that resolver
+      // Resolver can only modify
+      // complaints assigned to them.
+
       if (complaint.assignedResolver !== req.user.username) {
         return res.status(403).json({
+          success: false,
+
           message: "You are not assigned to this complaint.",
         });
       }
 
       const allowedStatuses = [
         "Pending",
+
         "In Progress",
+
         "Resolved",
+
         "Rejected",
       ];
 
       if (status && !allowedStatuses.includes(status)) {
         return res.status(400).json({
+          success: false,
+
           message: "Invalid complaint status.",
         });
       }
 
-      complaint.status = status || complaint.status;
+      if (status !== undefined) {
+        complaint.status = status;
+      }
 
-      complaint.comments = comments ?? complaint.comments;
+      if (comments !== undefined) {
+        complaint.comments = comments;
+      }
 
       await complaint.save();
 
-      res.json(complaint);
+      return res.json({
+        success: true,
+
+        message: "Complaint updated successfully.",
+
+        complaint,
+      });
     } catch (err) {
       console.error("Resolver complaint update error:", err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message: "Unable to update complaint.",
       });
     }

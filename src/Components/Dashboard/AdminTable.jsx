@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 
 function AdminTable({ setStats }) {
   const [complaints, setComplaints] = useState([]);
-
   const [resolvers, setResolvers] = useState([]);
 
   const [search, setSearch] = useState("");
-
   const [statusFilter, setStatusFilter] = useState("All");
 
   const [loading, setLoading] = useState(true);
@@ -19,11 +17,17 @@ function AdminTable({ setStats }) {
 
   const token = sessionStorage.getItem("token");
 
-  //fetch complaints
+  // =====================================================
+  // FETCH COMPLAINTS
+  // =====================================================
 
   const fetchComplaints = async () => {
     try {
       setLoading(true);
+
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
 
       const params = new URLSearchParams();
 
@@ -44,60 +48,126 @@ function AdminTable({ setStats }) {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Unable to fetch complaints.");
-      }
-
       const data = await response.json();
 
-      setComplaints(data.complaints || []);
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to fetch complaints.");
+      }
 
-      setStats(
-        data.stats || {
+      // -------------------------------------------------
+      // Make sure complaints is always an array
+      // -------------------------------------------------
+
+      const complaintList = Array.isArray(data.complaints)
+        ? data.complaints
+        : Array.isArray(data)
+          ? data
+          : [];
+
+      setComplaints(complaintList);
+
+      // -------------------------------------------------
+      // Statistics
+      // -------------------------------------------------
+
+      if (data.stats && typeof data.stats === "object") {
+        setStats({
+          total: Number(data.stats.total) || 0,
+
+          pending: Number(data.stats.pending) || 0,
+
+          inProgress: Number(data.stats.inProgress) || 0,
+
+          resolved: Number(data.stats.resolved) || 0,
+
+          rejected: Number(data.stats.rejected) || 0,
+
+          assigned: Number(data.stats.assigned) || 0,
+        });
+      } else {
+        setStats({
           total: 0,
           pending: 0,
           inProgress: 0,
           resolved: 0,
           rejected: 0,
           assigned: 0,
-        },
-      );
+        });
+      }
     } catch (error) {
-      console.error(error);
-      alert("Unable to load complaints.");
+      console.error("Fetch complaints error:", error);
+
+      setComplaints([]);
+
+      alert(error.message || "Unable to load complaints.");
     } finally {
       setLoading(false);
     }
   };
 
-  //fetch resolver
+  // =====================================================
+  // FETCH RESOLVERS
+  // =====================================================
 
   const fetchResolvers = async () => {
     try {
+      if (!token) {
+        setResolvers([]);
+        return;
+      }
+
       const response = await fetch("http://localhost:8000/admin/resolvers", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Unable to fetch resolvers.");
-      }
-
       const data = await response.json();
 
-      setResolvers(data);
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to fetch resolvers.");
+      }
+
+      // -------------------------------------------------
+      // Support both:
+      //
+      // [ resolver, resolver ]
+      //
+      // and:
+      //
+      // { resolvers: [ resolver, resolver ] }
+      // -------------------------------------------------
+
+      let resolverList = [];
+
+      if (Array.isArray(data)) {
+        resolverList = data;
+      } else if (data && Array.isArray(data.resolvers)) {
+        resolverList = data.resolvers;
+      } else if (data && Array.isArray(data.data)) {
+        resolverList = data.data;
+      }
+
+      setResolvers(resolverList);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch resolvers error:", error);
+
+      setResolvers([]);
     }
   };
+
+  // =====================================================
+  // INITIAL LOAD / STATUS FILTER
+  // =====================================================
 
   useEffect(() => {
     fetchComplaints();
     fetchResolvers();
   }, [statusFilter]);
 
-  //search
+  // =====================================================
+  // SEARCH
+  // =====================================================
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -107,18 +177,27 @@ function AdminTable({ setStats }) {
     return () => clearTimeout(timer);
   }, [search]);
 
-  //update complaint
+  // =====================================================
+  // UPDATE COMPLAINT
+  // =====================================================
 
   const updateComplaint = async (complaintId, changes) => {
     try {
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
       const response = await fetch(
         `http://localhost:8000/admin/complaints/${complaintId}`,
         {
           method: "PUT",
+
           headers: {
             "Content-Type": "application/json",
+
             Authorization: `Bearer ${token}`,
           },
+
           body: JSON.stringify(changes),
         },
       );
@@ -135,13 +214,15 @@ function AdminTable({ setStats }) {
 
       alert("Complaint updated successfully.");
     } catch (error) {
-      console.error(error);
+      console.error("Update complaint error:", error);
 
-      alert(error.message);
+      alert(error.message || "Unable to update complaint.");
     }
   };
 
-  //open details
+  // =====================================================
+  // OPEN DETAILS
+  // =====================================================
 
   const openDetails = (complaint) => {
     setSelectedComplaint(complaint);
@@ -151,8 +232,14 @@ function AdminTable({ setStats }) {
     setSelectedStatus(complaint.status || "Pending");
   };
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
     <div className="w-full">
+      {/* SEARCH + FILTER */}
+
       <div className="bg-white shadow-sm border rounded-lg mx-2 mt-4 p-4">
         <div className="flex flex-col md:flex-row gap-3">
           <input
@@ -181,9 +268,13 @@ function AdminTable({ setStats }) {
         </div>
       </div>
 
+      {/* TITLE */}
+
       <div className="bg-gray-200 w-auto mt-4 mx-2 rounded-sm">
         <h4 className="text-sm py-2 px-4">Complaint Details</h4>
       </div>
+
+      {/* TABLE */}
 
       <div className="h-[75vh] overflow-auto rounded-lg border border-gray-300 shadow-sm m-2">
         {loading ? (
@@ -219,62 +310,65 @@ function AdminTable({ setStats }) {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
-              {complaints.map((complaint, index) => (
-                <tr key={complaint._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4">{index + 1}</td>
+              {Array.isArray(complaints) &&
+                complaints.map((complaint, index) => (
+                  <tr key={complaint._id || index} className="hover:bg-gray-50">
+                    <td className="px-4 py-4">{index + 1}</td>
 
-                  <td className="px-4 py-4">
-                    <div className="font-medium text-gray-800">
-                      {complaint.username}
-                    </div>
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-gray-800">
+                        {complaint.username}
+                      </div>
 
-                    <div className="text-xs text-gray-400">
-                      UID: {complaint.uid}
-                    </div>
-                  </td>
+                      <div className="text-xs text-gray-400">
+                        UID: {complaint.uid}
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-4">
-                    <span className="text-xs text-green-600">
-                      {complaint._id}
-                    </span>
-                  </td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs text-green-600">
+                        {complaint._id}
+                      </span>
+                    </td>
 
-                  <td className="px-4 py-4">{complaint.branch}</td>
+                    <td className="px-4 py-4">{complaint.branch}</td>
 
-                  <td className="px-4 py-4">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                        complaint.status === "Resolved"
-                          ? "bg-green-100 text-green-700"
-                          : complaint.status === "Rejected"
-                            ? "bg-red-100 text-red-700"
-                            : complaint.status === "In Progress"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      {complaint.status || "Pending"}
-                    </span>
-                  </td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                          complaint.status === "Resolved"
+                            ? "bg-green-100 text-green-700"
+                            : complaint.status === "Rejected"
+                              ? "bg-red-100 text-red-700"
+                              : complaint.status === "In Progress"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {complaint.status || "Pending"}
+                      </span>
+                    </td>
 
-                  <td className="px-4 py-4">
-                    {complaint.assignedResolver || "Not assigned"}
-                  </td>
+                    <td className="px-4 py-4">
+                      {complaint.assignedResolver || "Not assigned"}
+                    </td>
 
-                  <td className="px-4 py-4">
-                    <button
-                      onClick={() => openDetails(complaint)}
-                      className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs"
-                    >
-                      View / Manage
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => openDetails(complaint)}
+                        className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs"
+                      >
+                        View / Manage
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* DETAILS MODAL */}
 
       {selectedComplaint && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
@@ -353,6 +447,8 @@ function AdminTable({ setStats }) {
                 </div>
               </div>
 
+              {/* RESOLVER */}
+
               <div className="mt-5">
                 <label className="block text-sm font-semibold mb-2">
                   Assign Resolver
@@ -365,19 +461,31 @@ function AdminTable({ setStats }) {
                 >
                   <option value="">Unassigned</option>
 
-                  {resolvers.map((resolver) => (
-                    <option key={resolver._id} value={resolver.username}>
-                      {resolver.name || resolver.username} ({resolver.username})
-                    </option>
-                  ))}
+                  {Array.isArray(resolvers) &&
+                    resolvers.map((resolver) => (
+                      <option
+                        key={resolver._id || resolver.username}
+                        value={resolver.username}
+                      >
+                        {resolver.name || resolver.username}
+
+                        {" ("}
+
+                        {resolver.username}
+
+                        {")"}
+                      </option>
+                    ))}
                 </select>
 
-                {resolvers.length === 0 && (
+                {Array.isArray(resolvers) && resolvers.length === 0 && (
                   <p className="text-xs text-red-500 mt-2">
                     No Resolver accounts are currently registered.
                   </p>
                 )}
               </div>
+
+              {/* STATUS */}
 
               <div className="mt-5">
                 <label className="block text-sm font-semibold mb-2">
@@ -398,6 +506,8 @@ function AdminTable({ setStats }) {
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
+
+              {/* BUTTONS */}
 
               <div className="flex justify-end gap-3 mt-6">
                 <button

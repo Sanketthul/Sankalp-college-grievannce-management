@@ -1,49 +1,89 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 
-function AddcomplaintsModal(props) {
-
+function AddcomplaintsModal() {
   const current = new Date().toLocaleString();
   const date_time_arr = current.split(", ");
- 
-  // console.log(date_time_arr);
+
+  const username = sessionStorage.getItem("username") || "";
+
+  const uid = sessionStorage.getItem("uid") || "";
+
   const [data, setData] = useState({
-    username: "",
-    uid: "",
     p_incharge: "",
     branch: "",
     complaint: "",
-    date:date_time_arr[0],
-    time:date_time_arr[1]
+    date: date_time_arr[0],
+    time: date_time_arr[1],
   });
 
+  const [loading, setLoading] = useState(false);
+
   const addData = (e) => {
-    setData(() => ({
-      ...data,
-      [e.target.name]: e.target.value,
-      [e.target.name]: e.target.value,
-      [e.target.name]: e.target.value,
-      [e.target.name]: e.target.value,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target;
+
+    setData((prevData) => ({
+      ...prevData,
+      [name]: value,
     }));
   };
 
-  function sendData(e) {
+  async function sendData(e) {
     e.preventDefault();
-    // console.log(formData);
 
-    fetch("http://localhost:8000/complaints", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then((res) => {
-      console.log(res);
-      console.log(data);
-    });
+    const token = sessionStorage.getItem("token");
 
-    alert("Token create sucessfully!");
+    if (!token) {
+      alert("Your session has expired. Please login again.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch("http://localhost:8000/complaints", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Complaint created successfully! 🎫");
+
+        // Clear complaint-specific fields
+        setData({
+          p_incharge: "",
+          branch: "",
+          complaint: "",
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString(),
+        });
+      } else if (response.status === 401) {
+        alert("Your session has expired. Please login again.");
+      } else if (response.status === 403) {
+        alert(
+          result.message || "You do not have permission to create a complaint.",
+        );
+      } else if (result.errors && Array.isArray(result.errors)) {
+        const messages = result.errors.map((error) => error.message).join("\n");
+
+        alert(messages);
+      } else {
+        alert(result.message || "Unable to create complaint.");
+      }
+    } catch (error) {
+      console.error("Create complaint error:", error);
+
+      alert("Unable to connect to the server.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -52,93 +92,124 @@ function AddcomplaintsModal(props) {
         <form
           onSubmit={sendData}
           id="contact-me"
-          className="w-screen lg:w-full mx-auto max-w-3xl bg-white shadow p-8 text-gray-700 "
+          className="w-screen lg:w-full mx-auto max-w-3xl bg-white shadow p-8 text-gray-700"
         >
-          <h6 className="w-full my-3 text-md font-bold leading-tight ">
-            Fill Details to create complaint   <span className="  px-2 bg-gray-700 text-white rounded-xl ">  token 🎫 </span>  
+          <h6 className="w-full my-3 text-md font-bold leading-tight">
+            Fill Details to create complaint
+            <span className="px-2 ml-2 bg-gray-700 text-white rounded-xl">
+              token 🎫
+            </span>
           </h6>
-          {/* name field */}
-          <div className="flex flex-wrap mb-2">
-            <div className="relative w-full appearance-none label-floating">
+
+          {/* STUDENT NAME */}
+
+          <div className="flex flex-wrap mb-4">
+            <div className="relative w-full">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">
+                Student Name
+              </label>
+
               <input
-                className=" text-sm tracking-wide py-2 px-4 mb-3 leading-relaxed appearance-none block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
-                name="username"
+                value={username}
+                readOnly
+                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-100 border border-gray-200 rounded cursor-not-allowed text-gray-600"
                 type="text"
-                placeholder="Your username"
-                onChange={addData}
-                required
               />
             </div>
           </div>
-          {/* UID field */}
+
+          {/* UID */}
+
           <div className="flex flex-wrap mb-6">
-            <div className="relative w-full appearance-none label-floating">
+            <div className="relative w-full">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">
+                UID
+              </label>
+
               <input
-                className=" text-sm tracking-wide py-2 px-4 mb-1 leading-relaxed appearance-none block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
-                name="uid"
+                value={uid}
+                readOnly
+                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-100 border border-gray-200 rounded cursor-not-allowed text-gray-600"
                 type="text"
-                placeholder="UID Number"
-                onChange={addData}
-                required
               />
             </div>
           </div>
-          {/* Person Incharge */}
+
+          {/* PERSON INCHARGE */}
+
           <div className="flex flex-wrap mb-6">
-            <div className="relative w-full appearance-none label-floating">
+            <div className="relative w-full">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">
+                Person Incharge
+              </label>
+
               <input
-                className="   text-sm tracking-wide py-2 px-4 mb-1 leading-relaxed appearance-none block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
+                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
                 name="p_incharge"
                 type="text"
                 placeholder="Name of the Person Incharge"
+                value={data.p_incharge}
                 onChange={addData}
                 required
               />
             </div>
           </div>
-          {/* select */}
-          <div className="  inline-block relative w-full">
+
+          {/* BRANCH */}
+
+          <div className="inline-block relative w-full">
+            <label className="block text-sm font-semibold text-gray-600 mb-1">
+              Complaint Branch
+            </label>
+
             <select
-              className="block mb-6 appearance-none w-full bg-gray-50 border border-gray-400 hover:border-gray-500 px-4 py-3 pr-8 rounded  leading-tight focus:outline-none focus:shadow-outline "
+              className="block mb-6 appearance-none w-full bg-gray-50 border border-gray-400 hover:border-gray-500 px-4 py-3 pr-8 rounded leading-tight focus:outline-none focus:shadow-outline"
               name="branch"
+              value={data.branch}
               onChange={addData}
               required
             >
-              <option className=" text-sm text-gray-700"> <span className="text-sm">Select complaint Branch </span> </option>
-              <option className="text-sm">Academic</option>
-              <option className="text-sm">Library</option>
-              <option className="text-sm">Canteen</option>
-              <option className="text-sm">Other</option>
+              <option value="">Select complaint branch</option>
+
+              <option value="Academic">Academic</option>
+
+              <option value="Library">Library</option>
+
+              <option value="Canteen">Canteen</option>
+
+              <option value="Other">Other</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
           </div>
-          {/* complaint field */}
+
+          {/* COMPLAINT */}
+
           <div className="flex flex-wrap mb-6">
-            <div className="relative w-full appearance-none label-floating">
+            <div className="relative w-full">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">
+                Complaint
+              </label>
+
               <textarea
-                className="autoexpand  text-sm tracking-wide py-2 px-4 mb-3 leading-relaxed appearance-none block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
+                className="text-sm tracking-wide py-2 px-4 mb-3 leading-relaxed block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
                 name="complaint"
-                type="text"
                 placeholder="Write your complaint here..."
+                value={data.complaint}
                 onChange={addData}
+                rows="5"
                 required
               />
             </div>
           </div>
-          <div className="">
+
+          {/* BUTTON */}
+
+          <div>
             <button
-              className="w-full shadow bg-violet-400 hover:bg-violet-600 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded"
+              className="w-full shadow bg-violet-400 hover:bg-violet-600 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded disabled:opacity-50"
               type="submit"
+              disabled={loading}
             >
-              Create token
+              {loading ? "Creating token..." : "Create token"}
             </button>
           </div>
         </form>

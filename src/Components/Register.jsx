@@ -33,7 +33,7 @@ function Register() {
       return;
     }
 
-    if (formData.role === "Admin" && !formData.adminSecretKey) {
+    if (formData.role === "Admin" && !formData.adminSecretKey.trim()) {
       alert("Admin secret key is required.");
       return;
     }
@@ -43,32 +43,53 @@ function Register() {
 
       const response = await fetch("http://localhost:8000/register", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      if (response.status === 200) {
-        alert("User registered successfully!");
+      if (response.ok) {
+        alert(data.message || "User registered successfully!");
+
         navigate("/login");
-      } else if (response.status === 401) {
-        alert("Invalid Admin Secret Key.");
-      } else if (response.status === 409) {
-        alert("Username, email or UID already exists.");
-      } else {
-        alert(data.msg || "Registration failed.");
+
+        return;
       }
+
+      if (data.errors && Array.isArray(data.errors)) {
+        const messages = data.errors.map((error) => error.message).join("\n");
+
+        alert(messages);
+
+        return;
+      }
+
+      if (response.status === 403) {
+        alert(data.message || "Invalid Admin Secret Key.");
+
+        return;
+      }
+
+      if (response.status === 409) {
+        alert(data.message || "Username, email or UID already exists.");
+
+        return;
+      }
+
+      alert(data.message || data.msg || "Registration failed.");
     } catch (error) {
       console.error("Registration error:", error);
+
       alert("Unable to connect to the server.");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div>
       <div className="h-screen md:flex">
