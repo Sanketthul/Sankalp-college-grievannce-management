@@ -2,28 +2,29 @@ const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Make sure JWT secret exists
 if (!JWT_SECRET) {
-  console.warn("WARNING: JWT_SECRET is not configured.");
+  console.error("ERROR: JWT_SECRET is missing from environment variables.");
 }
 
-// Verify that the user is logged in
+//authenticate token
+
 const authenticateToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
       return res.status(401).json({
+        success: false,
         message: "Authentication token is required.",
       });
     }
-
-    // Expected:
-    // Authorization: Bearer <token>
 
     const parts = authHeader.split(" ");
 
     if (parts.length !== 2 || parts[0] !== "Bearer") {
       return res.status(401).json({
+        success: false,
         message: "Invalid authorization format.",
       });
     }
@@ -32,7 +33,6 @@ const authenticateToken = (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Make logged-in user available to following routes
     req.user = decoded;
 
     next();
@@ -40,21 +40,25 @@ const authenticateToken = (req, res, next) => {
     console.error("Authentication error:", error.message);
 
     return res.status(401).json({
+      success: false,
       message: "Invalid or expired authentication token.",
     });
   }
 };
 
-// Admin-only middleware
+//admin
+
 const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
+      success: false,
       message: "Authentication required.",
     });
   }
 
   if (req.user.role !== "Admin") {
     return res.status(403).json({
+      success: false,
       message: "Admin access required.",
     });
   }
@@ -62,16 +66,19 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Resolver-only middleware
+//resolver
+
 const requireResolver = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
+      success: false,
       message: "Authentication required.",
     });
   }
 
   if (req.user.role !== "Resolver") {
     return res.status(403).json({
+      success: false,
       message: "Resolver access required.",
     });
   }
@@ -79,16 +86,19 @@ const requireResolver = (req, res, next) => {
   next();
 };
 
-// Student-only middleware
+//student
+
 const requireStudent = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
+      success: false,
       message: "Authentication required.",
     });
   }
 
   if (req.user.role !== "Student") {
     return res.status(403).json({
+      success: false,
       message: "Student access required.",
     });
   }

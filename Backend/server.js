@@ -1,11 +1,66 @@
-const express = require("express");
 require("dotenv").config();
 
-const app = express();
+const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
+const app = express();
+
+if (!process.env.DBURL) {
+  throw new Error("DBURL is missing from environment variables.");
+}
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is missing from environment variables.");
+}
+
+if (!process.env.ADMIN_SECRET_KEY) {
+  throw new Error("ADMIN_SECRET_KEY is missing from environment variables.");
+}
+
+const PORT = process.env.PORT || 8000;
+
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+
+//middleware
+
+app.use(
+  cors({
+    origin: CLIENT_URL,
+
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.use(express.json());
+
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
+
+//database
+
+mongoose
+  .connect(process.env.DBURL)
+  .then(() => {
+    console.log("Database connection successful");
+  })
+  .catch((error) => {
+    console.error("Database connection failed:", error.message);
+  });
+
+//models
+
+const user_model = require("./Model/register");
+
+const Complaint_model = require("./Model/complaint");
+
 const {
   authenticateToken,
   requireAdmin,
@@ -13,54 +68,85 @@ const {
   requireStudent,
 } = require("./Middleware/auth");
 
-app.use(express.json());
+//complaint
 
-app.use(
-  cors({
-    origin: "*",
-  }),
-);
+const ComplaintRoutes = require("./Routes/complaints");
 
-const mongourl = process.env.DBURL;
+app.use("/", ComplaintRoutes);
 
-mongoose
-  .connect(mongourl)
-  .then(() => {
-    console.log("Database connection successful");
-  })
-  .catch((err) => {
-    console.error("Database connection error:", err);
-  });
+//register
 
-const user_registration = require("./Routes/registration");
-const user_model = require("./Model/register");
-app.use("/", user_registration);
+app.post("/register", async (req, res) => {
+  try {
+    const { username, password, role, name, email, uid, adminSecret } =
+      req.body;
 
-app.post("/update", (req, res) => {
-  var data = req.body;
+    if (!username || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Username, password and role are required.",
+      });
+    }
 
-  User.findOneAndUpdate(
-    { username: data.oldUsername },
-    { username: data.newUsername, password: data.newpassword },
-    { new: true },
-  )
-    .then((res) => {
-      if (res == null) {
-        res.send({ message: null });
+    if (role === "Admin") {
+      if (adminSecret !== process.env.ADMIN_SECRET_KEY) {
+        return res.status(403).json({
+          success: false,
+          message: "Invalid admin secret key.",
+        });
       }
-    })
-    .catch((err) => console.log(err));
+    }
+
+    const existingUser = await user_model.findOne({
+      username: username,
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "Username already exists.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new user_model({
+      username: username,
+
+      password: hashedPassword,
+
+      role: role,
+
+      name: name || "",
+
+      email: email || "",
+
+      uid: uid || "",
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful.",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to register user.",
+    });
+  }
 });
 
-var uid;
-
-//login
 app.post("/login", async (req, res) => {
   try {
     const { uname, pass } = req.body;
 
     if (!uname || !pass) {
       return res.status(400).json({
+        success: false,
         message: "Username and password are required.",
       });
     }
@@ -71,6 +157,7 @@ app.post("/login", async (req, res) => {
 
     if (!doc) {
       return res.status(401).json({
+        success: false,
         message: "Invalid username or password.",
       });
     }
@@ -79,152 +166,88 @@ app.post("/login", async (req, res) => {
 
     if (!passwordMatch) {
       return res.status(401).json({
+        success: false,
         message: "Invalid username or password.",
       });
     }
 
-    // CREATE JWT
-
     const token = jwt.sign(
       {
         userId: doc._id.toString(),
+
         username: doc.username,
+
         uid: doc.uid,
+
         role: doc.role,
       },
+
       process.env.JWT_SECRET,
+
       {
         expiresIn: "2h",
       },
     );
 
-    console.log("Login successful:", {
-      username: doc.username,
-      role: doc.role,
-    });
+    res.status(200).json({
+      success: true,
 
-    return res.status(200).json({
       message: "Login successful.",
-      token: token,
+
+      token,
+
       user: {
         username: doc.username,
+
         name: doc.name,
+
         uid: doc.uid,
+
         role: doc.role,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
+      success: false,
       message: "Server error during login.",
     });
   }
 });
 
-var complaintsData;
+app.get(
+  "/history",
 
-const Complaint_model = require("./Model/complaint");
-const Complaint = require("./Routes/complaints");
-app.use("/", Complaint);
+  authenticateToken,
 
-// Admin complaint delete ROUTE
+  requireStudent,
 
-app.get("/delete", (req, res) => {
-  User.deleteMany({ "": "" }).then((data) => res.send(data));
-});
+  async (req, res) => {
+    try {
+      const data = await Complaint_model.find({
+        uid: req.user.uid,
+      });
 
-app.post("/delete/:id", (req, res) => {
-  const userid = req.params.id;
+      res.status(200).json({
+        success: true,
+        data: data,
+      });
+    } catch (error) {
+      console.error("History error:", error);
 
-  Complaint_model.deleteOne({ _id: userid }).then((data) => {
-    console.log(data);
-  });
-});
+      res.status(500).json({
+        success: false,
+        message: "Unable to fetch complaint history.",
+      });
+    }
+  },
+);
 
-// admin route
+const errorHandler = require("./Middleware/errorHandler");
 
-app.get("/admin", authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const data = await Complaint_model.find();
+app.use(errorHandler);
 
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      message: "Unable to fetch complaints.",
-    });
-  }
-});
-
-// resolver
-
-var userId = new Array();
-
-app.post("/resolver/:id", (req, res) => {
-  const userid = req.params.id;
-  Complaint_model.findOne({ _id: userid }).then((data) => {
-    userId.push(data);
-  });
-});
-
-//remove user
-
-app.put("/removeUser", (req, res) => {
-  var username = req.body.username;
-  console.log(username);
-  User.deleteOne({ username: username })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-});
-
-//student feedback
-app.put("/studentFeedback", (req, res) => {
-  var complaintID = req.body.complaintID;
-  var studentSatisfaction = req.body.studentSatisfaction;
-  var studentFeedback = req.body.studentFeedback;
-
-  var data;
-  Complaint_model.findOneAndUpdate(
-    { _id: complaintID },
-    {
-      studentSatisfaction: studentSatisfaction,
-      studentFeedback: studentFeedback,
-    },
-    { new: true },
-  )
-    .then((result) => {
-      data = result;
-      userId.push(data);
-    })
-    .catch((err) => console.log(err));
-});
-
-app.get("/resolver", (req, res) => {
-  res.send(userId);
-});
-
-//history
-
-app.get("/history", authenticateToken, requireStudent, async (req, res) => {
-  try {
-    const data = await Complaint_model.find({
-      uid: req.user.uid,
-    });
-
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      message: "Unable to fetch complaint history.",
-    });
-  }
-});
-
-app.listen(process.env.PORT, () => {
-  console.log(`server started on port ${process.env.PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });
