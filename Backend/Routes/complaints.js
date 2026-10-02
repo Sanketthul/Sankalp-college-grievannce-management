@@ -27,8 +27,9 @@ router.post(
   async (req, res) => {
     try {
       const complaint = await Complaint.create({
-        // IMPORTANT:
-        // These come from JWT, NOT from frontend.
+        // These values come from JWT,
+        // NOT from the frontend.
+
         username: req.user.username,
 
         uid: req.user.uid,
@@ -82,9 +83,17 @@ router.get(
 
       let query = {};
 
+      // -------------------------------------------------
+      // STATUS FILTER
+      // -------------------------------------------------
+
       if (status !== "All") {
         query.status = status;
       }
+
+      // -------------------------------------------------
+      // SEARCH
+      // -------------------------------------------------
 
       if (search.trim()) {
         const searchRegex = {
@@ -120,9 +129,17 @@ router.get(
         ];
       }
 
+      // -------------------------------------------------
+      // COMPLAINTS
+      // -------------------------------------------------
+
       const complaints = await Complaint.find(query).sort({
         createdAt: -1,
       });
+
+      // -------------------------------------------------
+      // STATISTICS
+      // -------------------------------------------------
 
       const total = await Complaint.countDocuments();
 
@@ -244,9 +261,9 @@ router.put(
 
       const updateData = {};
 
-      // -------------------------------------------------
+      // =================================================
       // STATUS
-      // -------------------------------------------------
+      // =================================================
 
       if (status !== undefined) {
         const allowedStatuses = [
@@ -270,16 +287,25 @@ router.put(
         updateData.status = status;
       }
 
-      // -------------------------------------------------
+      // =================================================
       // RESOLVER
-      // -------------------------------------------------
+      // =================================================
 
       if (assignedResolver !== undefined) {
+        // ------------------------------------------------
+        // REMOVE RESOLVER
+        // ------------------------------------------------
+
         if (assignedResolver === "") {
           updateData.assignedResolver = null;
 
           updateData.assignedResolverUid = null;
-        } else {
+        }
+
+        // ------------------------------------------------
+        // ASSIGN RESOLVER
+        // ------------------------------------------------
+        else {
           const resolver = await User.findOne({
             username: assignedResolver,
 
@@ -299,6 +325,10 @@ router.put(
           updateData.assignedResolverUid = resolver.uid;
         }
       }
+
+      // =================================================
+      // UPDATE COMPLAINT
+      // =================================================
 
       const updatedComplaint = await Complaint.findByIdAndUpdate(
         req.params.id,
@@ -340,6 +370,58 @@ router.put(
 );
 
 // =====================================================
+// RESOLVER - GET ASSIGNED COMPLAINTS
+// =====================================================
+//
+// IMPORTANT:
+// This was missing from your current complaints.js.
+//
+// The Resolver dashboard calls:
+// GET http://localhost:8000/resolver
+//
+// This route returns only complaints assigned
+// to the currently logged-in Resolver.
+//
+
+router.get(
+  "/resolver",
+
+  authenticateToken,
+
+  requireResolver,
+
+  async (req, res) => {
+    try {
+      // The username comes from the JWT.
+      // We do NOT take the resolver username
+      // from the frontend.
+
+      const resolverUsername = req.user.username;
+
+      const complaints = await Complaint.find({
+        assignedResolver: resolverUsername,
+      }).sort({
+        createdAt: -1,
+      });
+
+      return res.status(200).json({
+        success: true,
+
+        complaints,
+      });
+    } catch (err) {
+      console.error("Get resolver complaints error:", err);
+
+      return res.status(500).json({
+        success: false,
+
+        message: "Unable to fetch assigned complaints.",
+      });
+    }
+  },
+);
+
+// =====================================================
 // RESOLVER - UPDATE COMPLAINT
 // =====================================================
 
@@ -354,6 +436,10 @@ router.put(
     try {
       const { complaintID, comments, status } = req.body;
 
+      // =================================================
+      // FIND COMPLAINT
+      // =================================================
+
       const complaint = await Complaint.findById(complaintID);
 
       if (!complaint) {
@@ -364,8 +450,9 @@ router.put(
         });
       }
 
-      // Resolver can only modify
-      // complaints assigned to them.
+      // =================================================
+      // CHECK RESOLVER OWNERSHIP
+      // =================================================
 
       if (complaint.assignedResolver !== req.user.username) {
         return res.status(403).json({
@@ -374,6 +461,10 @@ router.put(
           message: "You are not assigned to this complaint.",
         });
       }
+
+      // =================================================
+      // VALID STATUS
+      // =================================================
 
       const allowedStatuses = [
         "Pending",
@@ -393,13 +484,25 @@ router.put(
         });
       }
 
+      // =================================================
+      // UPDATE STATUS
+      // =================================================
+
       if (status !== undefined) {
         complaint.status = status;
       }
 
+      // =================================================
+      // UPDATE COMMENTS
+      // =================================================
+
       if (comments !== undefined) {
         complaint.comments = comments;
       }
+
+      // =================================================
+      // SAVE
+      // =================================================
 
       await complaint.save();
 
@@ -421,5 +524,9 @@ router.put(
     }
   },
 );
+
+// =====================================================
+// EXPORT ROUTER
+// =====================================================
 
 module.exports = router;

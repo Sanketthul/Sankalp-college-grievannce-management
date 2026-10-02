@@ -24,47 +24,59 @@ const registerValidation = [
     .trim()
     .notEmpty()
     .withMessage("Role is required.")
-    .isIn(["Student", "Admin"])
+
+    .isIn(["Student", "Admin", "Resolver"])
+
     .withMessage("Invalid role."),
 
   body("name")
     .trim()
     .notEmpty()
     .withMessage("Name is required.")
+
     .isLength({
       min: 2,
       max: 100,
     })
+
     .withMessage("Name must be between 2 and 100 characters."),
 
   body("email")
     .trim()
     .notEmpty()
     .withMessage("Email is required.")
+
     .isEmail()
     .withMessage("Please enter a valid email address.")
+
     .normalizeEmail(),
 
   body("uid")
     .trim()
     .notEmpty()
     .withMessage("UID is required.")
+
     .isLength({
       min: 2,
       max: 50,
     })
+
     .withMessage("UID must be between 2 and 50 characters."),
 
   body("username")
     .trim()
     .notEmpty()
     .withMessage("Username is required.")
+
     .isLength({
       min: 3,
       max: 30,
     })
+
     .withMessage("Username must be between 3 and 30 characters.")
+
     .matches(/^[A-Za-z0-9_.-]+$/)
+
     .withMessage(
       "Username can contain only letters, numbers, dots, underscores and hyphens.",
     ),
@@ -72,15 +84,33 @@ const registerValidation = [
   body("pass")
     .notEmpty()
     .withMessage("Password is required.")
+
     .isLength({
       min: 6,
       max: 128,
     })
+
     .withMessage("Password must be between 6 and 128 characters."),
+
+  // ---------------------------------------------------
+  // ADMIN SECRET
+  // ---------------------------------------------------
 
   body("adminSecretKey").custom((value, { req }) => {
     if (req.body.role === "Admin" && (!value || !value.trim())) {
       throw new Error("Admin secret key is required.");
+    }
+
+    return true;
+  }),
+
+  // ---------------------------------------------------
+  // RESOLVER SECRET
+  // ---------------------------------------------------
+
+  body("resolverSecretKey").custom((value, { req }) => {
+    if (req.body.role === "Resolver" && (!value || !value.trim())) {
+      throw new Error("Resolver secret key is required.");
     }
 
     return true;
