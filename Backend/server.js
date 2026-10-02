@@ -269,6 +269,10 @@ app.post(
         });
       }
 
+      // -------------------------------------------------
+      // PASSWORD CHECK
+      // -------------------------------------------------
+
       const passwordMatch = await bcrypt.compare(pass, doc.password);
 
       if (!passwordMatch) {
@@ -280,7 +284,7 @@ app.post(
       }
 
       // -------------------------------------------------
-      // JWT
+      // CREATE JWT
       // -------------------------------------------------
 
       const token = jwt.sign(
@@ -345,6 +349,8 @@ app.get(
     try {
       const data = await Complaint_model.find({
         uid: req.user.uid,
+      }).sort({
+        createdAt: -1,
       });
 
       return res.status(200).json({

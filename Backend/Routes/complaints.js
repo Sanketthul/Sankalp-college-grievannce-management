@@ -9,6 +9,14 @@ const {
   requireAdmin,
 } = require("../Middleware/auth");
 
+const {
+  validate,
+  complaintValidation,
+  adminComplaintQueryValidation,
+  adminComplaintUpdateValidation,
+  resolverComplaintUpdateValidation,
+} = require("../Middleware/validation");
+
 const Complaint = require("../Model/complaint");
 
 const User = require("../Model/register");
@@ -24,11 +32,15 @@ router.post(
 
   requireStudent,
 
+  complaintValidation,
+
+  validate,
+
   async (req, res) => {
     try {
       const complaint = await Complaint.create({
-        // These values come from JWT,
-        // NOT from the frontend.
+        // These values come from JWT.
+        // The student cannot change them.
 
         username: req.user.username,
 
@@ -77,11 +89,15 @@ router.get(
 
   requireAdmin,
 
+  adminComplaintQueryValidation,
+
+  validate,
+
   async (req, res) => {
     try {
       const { status = "All", search = "" } = req.query;
 
-      let query = {};
+      const query = {};
 
       // -------------------------------------------------
       // STATUS FILTER
@@ -130,7 +146,7 @@ router.get(
       }
 
       // -------------------------------------------------
-      // COMPLAINTS
+      // GET COMPLAINTS
       // -------------------------------------------------
 
       const complaints = await Complaint.find(query).sort({
@@ -255,46 +271,30 @@ router.put(
 
   requireAdmin,
 
+  adminComplaintUpdateValidation,
+
+  validate,
+
   async (req, res) => {
     try {
       const { assignedResolver, status } = req.body;
 
       const updateData = {};
 
-      // =================================================
+      // -------------------------------------------------
       // STATUS
-      // =================================================
+      // -------------------------------------------------
 
       if (status !== undefined) {
-        const allowedStatuses = [
-          "Pending",
-
-          "In Progress",
-
-          "Resolved",
-
-          "Rejected",
-        ];
-
-        if (!allowedStatuses.includes(status)) {
-          return res.status(400).json({
-            success: false,
-
-            message: "Invalid complaint status.",
-          });
-        }
-
         updateData.status = status;
       }
 
-      // =================================================
+      // -------------------------------------------------
       // RESOLVER
-      // =================================================
+      // -------------------------------------------------
 
       if (assignedResolver !== undefined) {
-        // ------------------------------------------------
-        // REMOVE RESOLVER
-        // ------------------------------------------------
+        // Remove resolver
 
         if (assignedResolver === "") {
           updateData.assignedResolver = null;
@@ -302,9 +302,7 @@ router.put(
           updateData.assignedResolverUid = null;
         }
 
-        // ------------------------------------------------
-        // ASSIGN RESOLVER
-        // ------------------------------------------------
+        // Assign resolver
         else {
           const resolver = await User.findOne({
             username: assignedResolver,
@@ -326,9 +324,9 @@ router.put(
         }
       }
 
-      // =================================================
-      // UPDATE COMPLAINT
-      // =================================================
+      // -------------------------------------------------
+      // UPDATE
+      // -------------------------------------------------
 
       const updatedComplaint = await Complaint.findByIdAndUpdate(
         req.params.id,
@@ -372,16 +370,6 @@ router.put(
 // =====================================================
 // RESOLVER - GET ASSIGNED COMPLAINTS
 // =====================================================
-//
-// IMPORTANT:
-// This was missing from your current complaints.js.
-//
-// The Resolver dashboard calls:
-// GET http://localhost:8000/resolver
-//
-// This route returns only complaints assigned
-// to the currently logged-in Resolver.
-//
 
 router.get(
   "/resolver",
@@ -392,14 +380,8 @@ router.get(
 
   async (req, res) => {
     try {
-      // The username comes from the JWT.
-      // We do NOT take the resolver username
-      // from the frontend.
-
-      const resolverUsername = req.user.username;
-
       const complaints = await Complaint.find({
-        assignedResolver: resolverUsername,
+        assignedResolver: req.user.username,
       }).sort({
         createdAt: -1,
       });
@@ -432,13 +414,17 @@ router.put(
 
   requireResolver,
 
+  resolverComplaintUpdateValidation,
+
+  validate,
+
   async (req, res) => {
     try {
       const { complaintID, comments, status } = req.body;
 
-      // =================================================
+      // -------------------------------------------------
       // FIND COMPLAINT
-      // =================================================
+      // -------------------------------------------------
 
       const complaint = await Complaint.findById(complaintID);
 
@@ -450,9 +436,9 @@ router.put(
         });
       }
 
-      // =================================================
-      // CHECK RESOLVER OWNERSHIP
-      // =================================================
+      // -------------------------------------------------
+      // OWNERSHIP CHECK
+      // -------------------------------------------------
 
       if (complaint.assignedResolver !== req.user.username) {
         return res.status(403).json({
@@ -462,47 +448,25 @@ router.put(
         });
       }
 
-      // =================================================
-      // VALID STATUS
-      // =================================================
-
-      const allowedStatuses = [
-        "Pending",
-
-        "In Progress",
-
-        "Resolved",
-
-        "Rejected",
-      ];
-
-      if (status && !allowedStatuses.includes(status)) {
-        return res.status(400).json({
-          success: false,
-
-          message: "Invalid complaint status.",
-        });
-      }
-
-      // =================================================
+      // -------------------------------------------------
       // UPDATE STATUS
-      // =================================================
+      // -------------------------------------------------
 
       if (status !== undefined) {
         complaint.status = status;
       }
 
-      // =================================================
+      // -------------------------------------------------
       // UPDATE COMMENTS
-      // =================================================
+      // -------------------------------------------------
 
       if (comments !== undefined) {
         complaint.comments = comments;
       }
 
-      // =================================================
+      // -------------------------------------------------
       // SAVE
-      // =================================================
+      // -------------------------------------------------
 
       await complaint.save();
 
@@ -526,7 +490,7 @@ router.put(
 );
 
 // =====================================================
-// EXPORT ROUTER
+// EXPORT
 // =====================================================
 
 module.exports = router;

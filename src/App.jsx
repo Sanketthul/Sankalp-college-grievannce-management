@@ -1,32 +1,118 @@
-import React from 'react';
+import React from "react";
+import Navbar from "./Components/Navbar/Navbar";
+
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import { Routes, Route } from "react-router-dom";
+
 import Hero from "./Components/home/Hero";
+
 import Login from "./Components/Login";
+
 import Register from "./Components/Register";
+
 import Dashboard from "./Components/Dashboard/Dashboard";
+
 import AdminDashboard from "./Components/Dashboard/AdminDashboard";
+
 import ResolverDashboard from "./Components/Dashboard/ResolverDashboard";
+
+import PrivateRoute from "./Components/PrivateRoute";
 
 function App() {
   return (
     <div className="App">
+      <Navbar />
       <Routes>
-        <Route path="/" element={<Hero></Hero>}></Route>
-        <Route path="/login" element={<Login></Login>}></Route>
-        <Route path="/register" element={<Register></Register>}></Route>
-        <Route path="/student" element={<Dashboard></Dashboard>}></Route>
+        {/* =================================================
+            PUBLIC ROUTES
+        ================================================= */}
+
+        <Route path="/" element={<Hero />} />
+
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+
+        {/* =================================================
+            STUDENT
+        ================================================= */}
+
+        <Route
+          path="/student"
+          element={
+            <PrivateRoute allowedRole="Student">
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* =================================================
+            ADMIN
+        ================================================= */}
+
         <Route
           path="/admin"
-          element={<AdminDashboard></AdminDashboard>}
-        ></Route>
+          element={
+            <PrivateRoute allowedRole="Admin">
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* =================================================
+            RESOLVER
+        ================================================= */}
+
         <Route
           path="/resolver"
-          element={<ResolverDashboard></ResolverDashboard>}
-        ></Route>
+          element={
+            <PrivateRoute allowedRole="Resolver">
+              <ResolverDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* =================================================
+            UNKNOWN ROUTE
+        ================================================= */}
+
+        <Route path="*" element={<NavigateToHome />} />
       </Routes>
     </div>
   );
+}
+
+// =====================================================
+// UNKNOWN ROUTE COMPONENT
+// =====================================================
+
+function NavigateToHome() {
+  const token = sessionStorage.getItem("token");
+
+  const role = sessionStorage.getItem("role");
+
+  if (token && role === "Admin") {
+    window.location.replace("/admin");
+
+    return null;
+  }
+
+  if (token && role === "Resolver") {
+    window.location.replace("/resolver");
+
+    return null;
+  }
+
+  if (token && role === "Student") {
+    window.location.replace("/student");
+
+    return null;
+  }
+
+  window.location.replace("/");
+
+  return null;
 }
 
 export default App;

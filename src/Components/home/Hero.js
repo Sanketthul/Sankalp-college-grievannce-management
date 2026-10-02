@@ -1,18 +1,14 @@
-import React  from 'react';
+import React from "react";
 import Container from "react-bootstrap/Container";
 import hero from "../../Assets/images/hero-img.png";
 import About from "./About";
 
-import Navbar from "../Navbar";
 import { Link } from "react-router-dom";
-import Footer from './Footer';
+import Footer from "./Footer";
 
 function Hero() {
   return (
     <div>
-      <Navbar></Navbar>
-      
-
       <Container className="main_container">
         <section className="text-gray-600 body-font">
           <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
@@ -28,9 +24,10 @@ function Hero() {
                 GRIEVANCE Resolver
               </h1>
               <p className="mb-8 leading-relaxed">
-               A <span className='font-bold'>token based</span> online platform to receive and act on
-                complaints reported by students of Universities, enabling prompt
-                actions on any issue raised by them.
+                A <span className="font-bold">token based</span> online platform
+                to receive and act on complaints reported by students of
+                Universities, enabling prompt actions on any issue raised by
+                them.
               </p>
               <div className="flex flex-col justify-center  lg:flex-row">
                 <Link to="register">
