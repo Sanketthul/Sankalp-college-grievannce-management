@@ -9,7 +9,7 @@ function ComplaintHistory() {
 
   const [complaintID, setComplaintID] = useState("");
   const [status, setStatus] = useState("");
-  const [comments, setComments] = use.State("");
+  const [comments, setComments] = useState("");
   const [feedback, openfeedback] = useState(false);
 
   const fetchFun = async () => {
