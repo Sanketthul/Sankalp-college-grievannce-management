@@ -9,12 +9,8 @@ function ComplaintHistory() {
 
   const [complaintID, setComplaintID] = useState("");
   const [status, setStatus] = useState("");
-  const [comments, setComments] = useState("");
+  const [comments, setComments] = use.State("");
   const [feedback, openfeedback] = useState(false);
-
-  // =====================================================
-  // FETCH STUDENT HISTORY
-  // =====================================================
 
   const fetchFun = async () => {
     try {
@@ -25,7 +21,7 @@ function ComplaintHistory() {
         return;
       }
 
-      const response = await fetch("http://localhost:8000/history", {
+      const response = await fetch("/api/history", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -57,10 +53,6 @@ function ComplaintHistory() {
     }
   };
 
-  // =====================================================
-  // FEEDBACK
-  // =====================================================
-
   const sendData = async () => {
     try {
       const token = sessionStorage.getItem("token");
@@ -81,7 +73,7 @@ function ComplaintHistory() {
         studentFeedback: comments.trim(),
       };
 
-      const response = await fetch("http://localhost:8000/studentFeedback", {
+      const response = await fetch("/api/studentFeedback", {
         method: "PUT",
 
         headers: {
@@ -115,10 +107,6 @@ function ComplaintHistory() {
     }
   };
 
-  // =====================================================
-  // STATUS BADGE
-  // =====================================================
-
   const getStatusClass = (statusValue) => {
     if (!statusValue) {
       return "history-status history-status-pending";
@@ -144,10 +132,6 @@ function ComplaintHistory() {
 
     return "history-status history-status-progress";
   };
-
-  // =====================================================
-  // TRACK HISTORY MODAL
-  // =====================================================
 
   const historyModal = HistoryModal
     ? createPortal(
@@ -251,10 +235,6 @@ function ComplaintHistory() {
         document.body,
       )
     : null;
-
-  // =====================================================
-  // STATUS MODAL
-  // =====================================================
 
   const statusModal = recordModal
     ? createPortal(
@@ -385,10 +365,6 @@ function ComplaintHistory() {
       )
     : null;
 
-  // =====================================================
-  // FEEDBACK MODAL
-  // =====================================================
-
   const feedbackModal = feedback
     ? createPortal(
         <div className="history-modal-overlay">
@@ -478,10 +454,6 @@ function ComplaintHistory() {
         document.body,
       )
     : null;
-
-  // =====================================================
-  // RENDER
-  // =====================================================
 
   return (
     <>

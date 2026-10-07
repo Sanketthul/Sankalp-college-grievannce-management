@@ -12,7 +12,7 @@ function Login() {
   function onSubmit(e) {
     e.preventDefault();
 
-    fetch("http://localhost:8000/login", {
+    fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -56,18 +56,12 @@ function Login() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-
         {/* LEFT BRAND PANEL */}
         <div className="auth-brand-panel">
           <div className="auth-brand-content">
+            <div className="auth-logo">S</div>
 
-            <div className="auth-logo">
-              S
-            </div>
-
-            <p className="auth-brand-label">
-              SANKALP
-            </p>
+            <p className="auth-brand-label">SANKALP</p>
 
             <h1>
               Resolve.
@@ -78,8 +72,8 @@ function Login() {
             </h1>
 
             <p className="auth-brand-description">
-              A digital grievance management platform designed to
-              connect students, faculty and administrators.
+              A digital grievance management platform designed to connect
+              students, faculty and administrators.
             </p>
 
             <div className="auth-highlight">
@@ -88,7 +82,6 @@ function Login() {
                 A platform to <strong>resolve</strong> your queries.
               </p>
             </div>
-
           </div>
 
           <div className="auth-decoration auth-decoration-one" />
@@ -98,41 +91,27 @@ function Login() {
 
         {/* RIGHT LOGIN PANEL */}
         <div className="auth-form-panel">
-
           <div className="auth-form-wrapper">
-
             <div className="auth-mobile-logo">
-              <div className="auth-logo">
-                S
-              </div>
+              <div className="auth-logo">S</div>
 
               <span>SANKALP</span>
             </div>
 
             <div className="auth-heading">
-              <p className="auth-eyebrow">
-                WELCOME BACK
-              </p>
+              <p className="auth-eyebrow">WELCOME BACK</p>
 
-              <h2>
-                Sign in to your account
-              </h2>
+              <h2>Sign in to your account</h2>
 
-              <p>
-                Enter your credentials to continue.
-              </p>
+              <p>Enter your credentials to continue.</p>
             </div>
 
             <form onSubmit={onSubmit}>
-
               {/* USERNAME */}
               <div className="ui-field">
-                <label htmlFor="username">
-                  Username
-                </label>
+                <label htmlFor="username">Username</label>
 
                 <div className="ui-input-wrapper">
-
                   <svg
                     className="ui-input-icon"
                     xmlns="http://www.w3.org/2000/svg"
@@ -163,18 +142,14 @@ function Login() {
                     autoComplete="username"
                     required
                   />
-
                 </div>
               </div>
 
               {/* PASSWORD */}
               <div className="ui-field">
-                <label htmlFor="password">
-                  Password
-                </label>
+                <label htmlFor="password">Password</label>
 
                 <div className="ui-input-wrapper">
-
                   <svg
                     className="ui-input-icon"
                     xmlns="http://www.w3.org/2000/svg"
@@ -183,18 +158,9 @@ function Login() {
                     stroke="currentColor"
                     strokeWidth="1.8"
                   >
-                    <rect
-                      x="4"
-                      y="10"
-                      width="16"
-                      height="11"
-                      rx="2"
-                    />
+                    <rect x="4" y="10" width="16" height="11" rx="2" />
 
-                    <path
-                      strokeLinecap="round"
-                      d="M8 10V7a4 4 0 018 0v3"
-                    />
+                    <path strokeLinecap="round" d="M8 10V7a4 4 0 018 0v3" />
                   </svg>
 
                   <input
@@ -210,26 +176,18 @@ function Login() {
                   <button
                     type="button"
                     className="password-toggle"
-                    onClick={() =>
-                      setShowPassword(!showPassword)
-                    }
+                    onClick={() => setShowPassword(!showPassword)}
                     aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
+                      showPassword ? "Hide password" : "Show password"
                     }
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
-
                 </div>
               </div>
 
               {/* LOGIN BUTTON */}
-              <button
-                type="submit"
-                className="auth-submit-button"
-              >
+              <button type="submit" className="auth-submit-button">
                 <span>Login</span>
 
                 <svg
@@ -252,26 +210,18 @@ function Login() {
                   />
                 </svg>
               </button>
-
             </form>
 
             <div className="auth-register">
-              <span>
-                Don't have an account?
-              </span>
+              <span>Don't have an account?</span>
 
-              <Link to="/register">
-                Create an account
-              </Link>
+              <Link to="/register">Create an account</Link>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   );
 }
 
 export default Login;
-

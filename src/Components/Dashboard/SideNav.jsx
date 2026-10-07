@@ -20,7 +20,7 @@ function SideNav(props) {
     e.preventDefault();
     // console.log(formData);
 
-    fetch("http://localhost:8000/update", {
+    fetch("/api/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

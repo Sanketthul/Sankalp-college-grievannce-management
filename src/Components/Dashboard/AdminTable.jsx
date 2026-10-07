@@ -38,7 +38,7 @@ function AdminTable({ setStats }) {
       }
 
       const response = await fetch(
-        `http://localhost:8000/admin/complaints?${params.toString()}`,
+        `/api/admin/complaints?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ function AdminTable({ setStats }) {
         return;
       }
 
-      const response = await fetch("http://localhost:8000/admin/resolvers", {
+      const response = await fetch("/api/admin/resolvers", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -150,19 +150,16 @@ function AdminTable({ setStats }) {
         throw new Error("Authentication token is missing.");
       }
 
-      const response = await fetch(
-        `http://localhost:8000/admin/complaints/${complaintId}`,
-        {
-          method: "PUT",
+      const response = await fetch(`/api/admin/complaints/${complaintId}`, {
+        method: "PUT",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify(changes),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+
+        body: JSON.stringify(changes),
+      });
 
       const data = await response.json();
 

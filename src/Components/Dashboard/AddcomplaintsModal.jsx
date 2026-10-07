@@ -40,7 +40,7 @@ function AddcomplaintsModal() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:8000/complaints", {
+      const response = await fetch("/api/complaints", {
         method: "POST",
 
         headers: {

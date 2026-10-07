@@ -2,36 +2,15 @@ import React, { useEffect, useState } from "react";
 import "./ResolverDashboard.css";
 
 function ResolverDashboard() {
-  // =====================================================
-  // AUTHENTICATION
-  // =====================================================
-
   const token = sessionStorage.getItem("token");
-  const username = sessionStorage.getItem("username") || "";
-
-  // =====================================================
-  // STATE
-  // =====================================================
-
   const [complaints, setComplaints] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [statusModal, setStatusModal] = useState(false);
-
   const [selectedComplaint, setSelectedComplaint] = useState(null);
-
   const [status, setStatus] = useState("");
-
   const [comments, setComments] = useState("");
-
   const [updating, setUpdating] = useState(false);
-
-  // =====================================================
-  // FETCH ASSIGNED COMPLAINTS
-  // =====================================================
 
   const fetchComplaints = async () => {
     try {
@@ -44,7 +23,7 @@ function ResolverDashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:8000/resolver", {
+      const response = await fetch("/api/resolver", {
         method: "GET",
 
         headers: {
@@ -80,17 +59,9 @@ function ResolverDashboard() {
     }
   };
 
-  // =====================================================
-  // INITIAL LOAD
-  // =====================================================
-
   useEffect(() => {
     fetchComplaints();
   }, []);
-
-  // =====================================================
-  // OPEN STATUS MODAL
-  // =====================================================
 
   const openStatusModal = (complaint) => {
     setSelectedComplaint(complaint);
@@ -101,10 +72,6 @@ function ResolverDashboard() {
 
     setStatusModal(true);
   };
-
-  // =====================================================
-  // CLOSE STATUS MODAL
-  // =====================================================
 
   const closeStatusModal = () => {
     if (updating) {
@@ -120,9 +87,7 @@ function ResolverDashboard() {
     setComments("");
   };
 
-  // =====================================================
-  // UPDATE COMPLAINT
-  // =====================================================
+  //update complaint
 
   const updateComplaint = async (e) => {
     e.preventDefault();
@@ -153,7 +118,7 @@ function ResolverDashboard() {
 
       setUpdating(true);
 
-      const response = await fetch("http://localhost:8000/complaints", {
+      const response = await fetch("/api/complaints", {
         method: "PUT",
 
         headers: {
@@ -190,9 +155,7 @@ function ResolverDashboard() {
     }
   };
 
-  // =====================================================
-  // STATUS CLASS
-  // =====================================================
+  //status class
 
   const getStatusClass = (complaintStatus) => {
     const normalizedStatus = String(complaintStatus || "").toLowerCase();
@@ -213,9 +176,7 @@ function ResolverDashboard() {
     }
   };
 
-  // =====================================================
-  // LOGOUT
-  // =====================================================
+  //logout
 
   const logout = () => {
     sessionStorage.removeItem("token");
@@ -227,9 +188,7 @@ function ResolverDashboard() {
     window.location.href = "/login";
   };
 
-  // =====================================================
-  // STATISTICS
-  // =====================================================
+  //stats
 
   const totalComplaints = complaints.length;
 
@@ -247,25 +206,9 @@ function ResolverDashboard() {
     (complaint) => String(complaint.status || "").toLowerCase() === "resolved",
   ).length;
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <div className="resolver-dashboard">
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      {/* =================================================
-          MAIN
-      ================================================= */}
-
       <main className="resolver-main">
-        {/* =================================================
-            PAGE HEADER
-        ================================================= */}
-
         <div className="resolver-page-header">
           <div>
             <span className="resolver-eyebrow">RESOLVER DASHBOARD</span>
@@ -301,13 +244,7 @@ function ResolverDashboard() {
           </button>
         </div>
 
-        {/* =================================================
-            SUMMARY
-        ================================================= */}
-
         <div className="resolver-summary">
-          {/* TOTAL */}
-
           <div className="resolver-summary-card">
             <div className="resolver-summary-icon">
               <svg
@@ -332,8 +269,6 @@ function ResolverDashboard() {
             </div>
           </div>
 
-          {/* IN PROGRESS */}
-
           <div className="resolver-summary-card">
             <div className="resolver-summary-icon progress-summary">
               <svg
@@ -357,8 +292,6 @@ function ResolverDashboard() {
               <strong>{inProgressComplaints}</strong>
             </div>
           </div>
-
-          {/* RESOLVED */}
 
           <div className="resolver-summary-card">
             <div className="resolver-summary-icon resolved-summary">
@@ -385,10 +318,6 @@ function ResolverDashboard() {
           </div>
         </div>
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
-
         {error && (
           <div className="resolver-error">
             <strong>Unable to load complaints</strong>
@@ -396,10 +325,6 @@ function ResolverDashboard() {
             <span>{error}</span>
           </div>
         )}
-
-        {/* =================================================
-            COMPLAINT TABLE
-        ================================================= */}
 
         {loading ? (
           <div className="resolver-state-card">
@@ -435,8 +360,6 @@ function ResolverDashboard() {
           </div>
         ) : (
           <div className="resolver-table-card">
-            {/* TABLE HEADER */}
-
             <div className="resolver-table-header">
               <div>
                 <span>WORK QUEUE</span>
@@ -449,8 +372,6 @@ function ResolverDashboard() {
                 {totalComplaints === 1 ? "Complaint" : "Complaints"}
               </span>
             </div>
-
-            {/* TABLE */}
 
             <div className="resolver-table-wrapper">
               <table className="resolver-table">
@@ -476,13 +397,9 @@ function ResolverDashboard() {
                   {Array.isArray(complaints) &&
                     complaints.map((complaint, index) => (
                       <tr key={complaint._id || index}>
-                        {/* NUMBER */}
-
                         <td>
                           <span className="resolver-number">{index + 1}</span>
                         </td>
-
-                        {/* COMPLAINT */}
 
                         <td>
                           <div className="resolver-complaint">
@@ -500,8 +417,6 @@ function ResolverDashboard() {
                           </div>
                         </td>
 
-                        {/* STUDENT */}
-
                         <td>
                           <span className="resolver-student">
                             {complaint.name ||
@@ -511,23 +426,17 @@ function ResolverDashboard() {
                           </span>
                         </td>
 
-                        {/* UID */}
-
                         <td>
                           <span className="resolver-uid">
                             {complaint.uid || complaint.studentUid || "N/A"}
                           </span>
                         </td>
 
-                        {/* STATUS */}
-
                         <td>
                           <span className={getStatusClass(complaint.status)}>
                             {complaint.status || "Pending"}
                           </span>
                         </td>
-
-                        {/* DATE */}
 
                         <td>
                           <span className="resolver-date">
@@ -538,8 +447,6 @@ function ResolverDashboard() {
                               : complaint.date || "N/A"}
                           </span>
                         </td>
-
-                        {/* ACTION */}
 
                         <td>
                           <button
@@ -560,15 +467,9 @@ function ResolverDashboard() {
         )}
       </main>
 
-      {/* =================================================
-          STATUS MODAL
-      ================================================= */}
-
       {statusModal && selectedComplaint && (
         <div className="resolver-modal-overlay">
           <div className="resolver-modal">
-            {/* MODAL HEADER */}
-
             <div className="resolver-modal-header">
               <div>
                 <span>COMPLAINT MANAGEMENT</span>
@@ -589,11 +490,7 @@ function ResolverDashboard() {
               </button>
             </div>
 
-            {/* MODAL FORM */}
-
             <form onSubmit={updateComplaint} className="resolver-modal-form">
-              {/* COMPLAINT ID */}
-
               <div className="resolver-form-group">
                 <label>Complaint ID</label>
 
@@ -606,8 +503,6 @@ function ResolverDashboard() {
                 />
               </div>
 
-              {/* COMPLAINT PREVIEW */}
-
               <div className="resolver-complaint-preview">
                 <span>COMPLAINT</span>
 
@@ -617,8 +512,6 @@ function ResolverDashboard() {
                     "No complaint description available."}
                 </p>
               </div>
-
-              {/* STATUS */}
 
               <div className="resolver-form-group">
                 <label>Complaint Status</label>
@@ -640,8 +533,6 @@ function ResolverDashboard() {
                 </select>
               </div>
 
-              {/* COMMENTS */}
-
               <div className="resolver-form-group">
                 <label>Comments / Resolution Details</label>
 
@@ -652,8 +543,6 @@ function ResolverDashboard() {
                   placeholder="Enter your comments or resolution details..."
                 />
               </div>
-
-              {/* BUTTONS */}
 
               <div className="resolver-modal-actions">
                 <button
