@@ -1,53 +1,77 @@
 import React from "react";
-import Container from "react-bootstrap/Container";
-import hero from "../../Assets/images/hero-img.png";
-import About from "./About";
-
 import { Link } from "react-router-dom";
+
+import About from "./About";
 import Footer from "./Footer";
+
+import hero from "../../Assets/images/hero-img.png";
 
 function Hero() {
   return (
-    <div>
-      <Container className="main_container">
-        <section className="text-gray-600 body-font">
-          <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
-            <div className="lg:max-w-lg lg:w-full md:w-1/2 w-5/6 mb-10 md:mb-0">
-              <img
-                className="object-cover object-center rounded "
-                alt="hero"
-                src="https://cdn3d.iconscout.com/3d/premium/thumb/online-technical-service-7666467-6220943.png?f=webp"
-              />
-            </div>
-            <div className="lg:flex-grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-left">
-              <h1 className="title-font font-bold  text-[2.2rem]  mb-4  text-gray-900">
-                GRIEVANCE Resolver
+    <>
+      <main className="hero-page">
+        <section className="hero-section">
+          <div className="hero-container">
+            {/* LEFT CONTENT */}
+
+            <div className="hero-content">
+              <div className="hero-eyebrow">COLLEGE GRIEVANCE MANAGEMENT</div>
+
+              <h1 className="hero-title">
+                Your concern.
+                <br />
+                <span>Your voice.</span>
               </h1>
-              <p className="mb-8 leading-relaxed">
-                A <span className="font-bold">token based</span> online platform
-                to receive and act on complaints reported by students of
-                Universities, enabling prompt actions on any issue raised by
-                them.
+
+              <p className="hero-description">
+                A simple and transparent platform for students to submit, track
+                and resolve their grievances efficiently.
               </p>
-              <div className="flex flex-col justify-center  lg:flex-row">
-                <Link to="register">
-                  <button className=" inline-flex text-white bg-[#8338ec] border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg">
-                    Register
-                  </button>
+
+              <div className="hero-actions">
+                <Link to="/register" className="hero-primary-button">
+                  Register
                 </Link>
-                <Link to="login">
-                  <button className="ml-4 inline-flex text-gray-700 bg-gray-100 border-0 py-2 px-6 focus:outline-none hover:bg-gray-200 rounded text-lg">
-                    LOGIN
-                  </button>
+
+                <Link to="/login" className="hero-secondary-button">
+                  Login
                 </Link>
               </div>
+
+              <div className="hero-info">
+                <div className="hero-info-item">
+                  <span className="hero-info-icon">✓</span>
+
+                  <span>Easy complaint submission</span>
+                </div>
+
+                <div className="hero-info-item">
+                  <span className="hero-info-icon">✓</span>
+
+                  <span>Track complaint status</span>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT IMAGE */}
+
+            <div className="hero-image-wrapper">
+              <div className="hero-image-background" />
+
+              <img
+                src={hero}
+                alt="Sankalp grievance management"
+                className="hero-image"
+              />
             </div>
           </div>
         </section>
-      </Container>
-      <About></About>
-      <Footer></Footer>
-    </div>
+
+        <About />
+
+        <Footer />
+      </main>
+    </>
   );
 }
 

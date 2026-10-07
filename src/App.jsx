@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "./Components/Navbar/Navbar";
+import "./App.css";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -24,19 +25,11 @@ function App() {
     <div className="App">
       <Navbar />
       <Routes>
-        {/* =================================================
-            PUBLIC ROUTES
-        ================================================= */}
-
         <Route path="/" element={<Hero />} />
 
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
-
-        {/* =================================================
-            STUDENT
-        ================================================= */}
 
         <Route
           path="/student"
@@ -47,10 +40,6 @@ function App() {
           }
         />
 
-        {/* =================================================
-            ADMIN
-        ================================================= */}
-
         <Route
           path="/admin"
           element={
@@ -59,10 +48,6 @@ function App() {
             </PrivateRoute>
           }
         />
-
-        {/* =================================================
-            RESOLVER
-        ================================================= */}
 
         <Route
           path="/resolver"
@@ -73,19 +58,11 @@ function App() {
           }
         />
 
-        {/* =================================================
-            UNKNOWN ROUTE
-        ================================================= */}
-
         <Route path="*" element={<NavigateToHome />} />
       </Routes>
     </div>
   );
 }
-
-// =====================================================
-// UNKNOWN ROUTE COMPONENT
-// =====================================================
 
 function NavigateToHome() {
   const token = sessionStorage.getItem("token");

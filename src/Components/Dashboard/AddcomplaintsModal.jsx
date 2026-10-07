@@ -1,11 +1,11 @@
 import React, { useState } from "react";
+import "./AddcomplaintsModal.css";
 
 function AddcomplaintsModal() {
   const current = new Date().toLocaleString();
   const date_time_arr = current.split(", ");
 
   const username = sessionStorage.getItem("username") || "";
-
   const uid = sessionStorage.getItem("uid") || "";
 
   const [data, setData] = useState({
@@ -56,7 +56,6 @@ function AddcomplaintsModal() {
       if (response.ok) {
         alert("Complaint created successfully! 🎫");
 
-        // Clear complaint-specific fields
         setData({
           p_incharge: "",
           branch: "",
@@ -79,7 +78,6 @@ function AddcomplaintsModal() {
       }
     } catch (error) {
       console.error("Create complaint error:", error);
-
       alert("Unable to connect to the server.");
     } finally {
       setLoading(false);
@@ -87,83 +85,67 @@ function AddcomplaintsModal() {
   }
 
   return (
-    <div className="w-full mx-16">
-      <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-        <form
-          onSubmit={sendData}
-          id="contact-me"
-          className="w-screen lg:w-full mx-auto max-w-3xl bg-white shadow p-8 text-gray-700"
-        >
-          <h6 className="w-full my-3 text-md font-bold leading-tight">
-            Fill Details to create complaint
-            <span className="px-2 ml-2 bg-gray-700 text-white rounded-xl">
-              token 🎫
-            </span>
-          </h6>
+    <div className="complaint-form-wrapper">
+      <form onSubmit={sendData} className="complaint-form">
+        {/* Header */}
+        <div className="complaint-form-header">
+          <div>
+            <p className="complaint-form-label">NEW GRIEVANCE</p>
 
-          {/* STUDENT NAME */}
+            <h3>Submit a Complaint</h3>
 
-          <div className="flex flex-wrap mb-4">
-            <div className="relative w-full">
-              <label className="block text-sm font-semibold text-gray-600 mb-1">
-                Student Name
-              </label>
-
-              <input
-                value={username}
-                readOnly
-                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-100 border border-gray-200 rounded cursor-not-allowed text-gray-600"
-                type="text"
-              />
-            </div>
+            <p className="complaint-form-description">
+              Provide the details below to register your grievance.
+            </p>
           </div>
 
-          {/* UID */}
+          <div className="complaint-token-icon">🎫</div>
+        </div>
 
-          <div className="flex flex-wrap mb-6">
-            <div className="relative w-full">
-              <label className="block text-sm font-semibold text-gray-600 mb-1">
-                UID
-              </label>
+        {/* Student Information */}
+        <div className="complaint-section">
+          <div className="complaint-section-title">Student Information</div>
 
-              <input
-                value={uid}
-                readOnly
-                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-100 border border-gray-200 rounded cursor-not-allowed text-gray-600"
-                type="text"
-              />
+          <div className="complaint-two-column">
+            <div className="complaint-field">
+              <label>Student Name</label>
+
+              <input type="text" value={username} readOnly />
+            </div>
+
+            <div className="complaint-field">
+              <label>UID</label>
+
+              <input type="text" value={uid} readOnly />
             </div>
           </div>
+        </div>
 
-          {/* PERSON INCHARGE */}
+        {/* Complaint Information */}
+        <div className="complaint-section">
+          <div className="complaint-section-title">Complaint Details</div>
 
-          <div className="flex flex-wrap mb-6">
-            <div className="relative w-full">
-              <label className="block text-sm font-semibold text-gray-600 mb-1">
-                Person Incharge
-              </label>
+          {/* Person Incharge */}
+          <div className="complaint-field">
+            <label htmlFor="p_incharge">Person Incharge</label>
 
-              <input
-                className="text-sm tracking-wide py-2 px-4 leading-relaxed block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
-                name="p_incharge"
-                type="text"
-                placeholder="Name of the Person Incharge"
-                value={data.p_incharge}
-                onChange={addData}
-                required
-              />
-            </div>
+            <input
+              id="p_incharge"
+              name="p_incharge"
+              type="text"
+              placeholder="Enter the person incharge name"
+              value={data.p_incharge}
+              onChange={addData}
+              required
+            />
           </div>
 
-          {/* BRANCH */}
-
-          <div className="inline-block relative w-full">
-            <label className="block text-sm font-semibold text-gray-600 mb-1">
-              Complaint Branch
-            </label>
+          {/* Branch */}
+          <div className="complaint-field">
+            <label htmlFor="branch">Complaint Branch</label>
 
             <select
-              className="block mb-6 appearance-none w-full bg-gray-50 border border-gray-400 hover:border-gray-500 px-4 py-3 pr-8 rounded leading-tight focus:outline-none focus:shadow-outline"
+              id="branch"
               name="branch"
               value={data.branch}
               onChange={addData}
@@ -181,41 +163,46 @@ function AddcomplaintsModal() {
             </select>
           </div>
 
-          {/* COMPLAINT */}
+          {/* Complaint */}
+          <div className="complaint-field">
+            <div className="complaint-label-row">
+              <label htmlFor="complaint">Complaint</label>
 
-          <div className="flex flex-wrap mb-6">
-            <div className="relative w-full">
-              <label className="block text-sm font-semibold text-gray-600 mb-1">
-                Complaint
-              </label>
-
-              <textarea
-                className="text-sm tracking-wide py-2 px-4 mb-3 leading-relaxed block w-full bg-gray-50 border border-gray-200 rounded focus:outline-none focus:bg-white focus:border-gray-500"
-                name="complaint"
-                placeholder="Write your complaint here..."
-                value={data.complaint}
-                onChange={addData}
-                rows="5"
-                required
-              />
+              <span>{data.complaint.length}/500</span>
             </div>
+
+            <textarea
+              id="complaint"
+              name="complaint"
+              placeholder="Describe your complaint clearly..."
+              value={data.complaint}
+              onChange={addData}
+              rows="5"
+              maxLength="500"
+              required
+            />
           </div>
+        </div>
 
-          {/* BUTTON */}
-
-          <div>
-            <button
-              className="w-full shadow bg-violet-400 hover:bg-violet-600 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Creating token..." : "Create token"}
-            </button>
-          </div>
-        </form>
-
-        <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6"></div>
-      </div>
+        {/* Submit */}
+        <button
+          className="complaint-submit-btn"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="complaint-spinner"></span>
+              Creating complaint...
+            </>
+          ) : (
+            <>
+              Create Complaint
+              <span>→</span>
+            </>
+          )}
+        </button>
+      </form>
     </div>
   );
 }

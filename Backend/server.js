@@ -8,10 +8,6 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 
-// =====================================================
-// ENVIRONMENT VARIABLES
-// =====================================================
-
 if (!process.env.DBURL) {
   throw new Error("DBURL is missing from environment variables.");
 }
@@ -32,9 +28,7 @@ const PORT = process.env.PORT || 8000;
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
-// =====================================================
-// VALIDATION
-// =====================================================
+// validation
 
 const {
   validate,
@@ -42,9 +36,7 @@ const {
   loginValidation,
 } = require("./Middleware/validation");
 
-// =====================================================
-// CORS
-// =====================================================
+// cors
 
 app.use(
   cors({
@@ -56,10 +48,6 @@ app.use(
   }),
 );
 
-// =====================================================
-// BODY PARSER
-// =====================================================
-
 app.use(express.json());
 
 app.use(
@@ -68,9 +56,7 @@ app.use(
   }),
 );
 
-// =====================================================
-// DATABASE
-// =====================================================
+// database
 
 mongoose
   .connect(process.env.DBURL)
@@ -81,17 +67,13 @@ mongoose
     console.error("Database connection failed:", error.message);
   });
 
-// =====================================================
-// MODELS
-// =====================================================
+// models
 
 const user_model = require("./Model/register");
 
 const Complaint_model = require("./Model/complaint");
 
-// =====================================================
-// AUTH MIDDLEWARE
-// =====================================================
+// auth middleware
 
 const {
   authenticateToken,
@@ -100,17 +82,13 @@ const {
   requireStudent,
 } = require("./Middleware/auth");
 
-// =====================================================
-// COMPLAINT ROUTES
-// =====================================================
+// complaint routes
 
 const ComplaintRoutes = require("./Routes/complaints");
 
 app.use("/", ComplaintRoutes);
 
-// =====================================================
-// REGISTRATION
-// =====================================================
+// registration
 
 app.post(
   "/register",
@@ -137,10 +115,6 @@ app.post(
 
       const finalPassword = password || pass;
 
-      // -------------------------------------------------
-      // ADMIN SECRET
-      // -------------------------------------------------
-
       if (role === "Admin") {
         const suppliedAdminSecret = adminSecretKey || adminSecret;
 
@@ -153,10 +127,6 @@ app.post(
         }
       }
 
-      // -------------------------------------------------
-      // RESOLVER SECRET
-      // -------------------------------------------------
-
       if (role === "Resolver") {
         const suppliedResolverSecret = resolverSecretKey || resolverSecret;
 
@@ -168,10 +138,6 @@ app.post(
           });
         }
       }
-
-      // -------------------------------------------------
-      // CHECK EXISTING USER
-      // -------------------------------------------------
 
       const existingUser = await user_model.findOne({
         $or: [
@@ -197,15 +163,7 @@ app.post(
         });
       }
 
-      // -------------------------------------------------
-      // HASH PASSWORD
-      // -------------------------------------------------
-
       const hashedPassword = await bcrypt.hash(finalPassword, 10);
-
-      // -------------------------------------------------
-      // CREATE USER
-      // -------------------------------------------------
 
       const newUser = new user_model({
         username: username.trim(),
@@ -240,9 +198,7 @@ app.post(
   },
 );
 
-// =====================================================
-// LOGIN
-// =====================================================
+// login
 
 app.post(
   "/login",
@@ -269,10 +225,6 @@ app.post(
         });
       }
 
-      // -------------------------------------------------
-      // PASSWORD CHECK
-      // -------------------------------------------------
-
       const passwordMatch = await bcrypt.compare(pass, doc.password);
 
       if (!passwordMatch) {
@@ -283,9 +235,7 @@ app.post(
         });
       }
 
-      // -------------------------------------------------
-      // CREATE JWT
-      // -------------------------------------------------
+      // create JWT
 
       const token = jwt.sign(
         {
@@ -334,9 +284,7 @@ app.post(
   },
 );
 
-// =====================================================
-// STUDENT HISTORY
-// =====================================================
+// Student history
 
 app.get(
   "/history",
@@ -370,17 +318,9 @@ app.get(
   },
 );
 
-// =====================================================
-// ERROR HANDLER
-// =====================================================
-
 const errorHandler = require("./Middleware/errorHandler");
 
 app.use(errorHandler);
-
-// =====================================================
-// SERVER
-// =====================================================
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

@@ -1,0 +1,463 @@
+/* =====================================================
+   SANKALP ADMIN DASHBOARD
+   ===================================================== */
+
+.admin-dashboard {
+  min-height: 100vh;
+  background: #f5f6fa;
+  color: #1f2937;
+}
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.admin-header {
+  width: 100%;
+  background: #030164;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 18px rgba(3, 1, 100, 0.18);
+  position: relative;
+  z-index: 20;
+}
+
+.admin-header-inner {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  min-height: 76px;
+  padding: 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =====================================================
+   BRAND
+   ===================================================== */
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.admin-logo {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #e8e085;
+  color: #030164;
+
+  font-size: 21px;
+  font-weight: 800;
+
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.15);
+}
+
+.admin-brand-text h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.admin-brand-text span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: rgba(255, 255, 255, 0.65);
+
+  font-size: 11px;
+  letter-spacing: 0.25px;
+}
+
+/* =====================================================
+   HEADER RIGHT
+   ===================================================== */
+
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  margin-right: 8px;
+}
+
+.admin-welcome span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+}
+
+.admin-welcome strong {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-divider {
+  width: 1px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 6px;
+}
+
+/* =====================================================
+   HEADER BUTTONS
+   ===================================================== */
+
+.admin-home-btn,
+.admin-logout-btn {
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-home-btn svg,
+.admin-logout-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-home-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.admin-home-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.admin-logout-btn {
+  background: #e8e085;
+  color: #030164;
+}
+
+.admin-logout-btn:hover {
+  background: #f0e99d;
+  transform: translateY(-1px);
+}
+
+/* =====================================================
+   MAIN
+   ===================================================== */
+
+.admin-main {
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
+  padding: 30px 32px 45px;
+}
+
+/* =====================================================
+   PAGE HEADING
+   ===================================================== */
+
+.admin-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 24px;
+}
+
+.admin-eyebrow {
+  margin: 0 0 6px;
+
+  color: #2d7495;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.admin-page-heading h2 {
+  margin: 0;
+
+  color: #030164;
+
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.admin-page-heading p {
+  margin: 7px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+/* =====================================================
+   SYSTEM STATUS
+   ===================================================== */
+
+.admin-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 13px;
+
+  border: 1px solid #dbe4e8;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  color: #4b5563;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-status-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #2d7495;
+
+  box-shadow: 0 0 0 4px rgba(45, 116, 149, 0.1);
+}
+
+/* =====================================================
+   MAIN DASHBOARD GRID
+   ===================================================== */
+
+.admin-dashboard-layout {
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr) 320px;
+
+  gap: 22px;
+
+  align-items: start;
+}
+
+/* =====================================================
+   TABLE SECTION
+   ===================================================== */
+
+.admin-table-section,
+.admin-sidebar {
+  background: #ffffff;
+
+  border: 1px solid #e6e8ef;
+  border-radius: 16px;
+
+  box-shadow: 0 5px 20px rgba(3, 1, 100, 0.06);
+}
+
+.admin-table-section {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-section-header {
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #edf0f4;
+
+  background: #ffffff;
+}
+
+.admin-section-label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #2d7495;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.admin-section-header h3,
+.admin-sidebar-header h3 {
+  margin: 0;
+
+  color: #030164;
+
+  font-size: 18px;
+  font-weight: 750;
+}
+
+/* =====================================================
+   TABLE CONTAINER
+   ===================================================== */
+
+.admin-table-container {
+  width: 100%;
+  overflow-x: auto;
+
+  padding: 4px;
+}
+
+/*
+   AdminTable may already contain its own styling.
+   These rules prevent the old large layout from
+   stretching outside the new dashboard.
+*/
+
+.admin-table-container table {
+  width: 100%;
+}
+
+/* =====================================================
+   SIDEBAR
+   ===================================================== */
+
+.admin-sidebar {
+  overflow: hidden;
+}
+
+.admin-sidebar-header {
+  padding: 20px;
+
+  border-bottom: 1px solid #edf0f4;
+}
+
+.admin-sidebar > * {
+  max-width: 100%;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 1100px) {
+  .admin-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header-inner {
+    min-height: 68px;
+    padding: 0 18px;
+  }
+
+  .admin-brand-text span {
+    display: none;
+  }
+
+  .admin-brand-text h1 {
+    font-size: 18px;
+  }
+
+  .admin-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .admin-welcome,
+  .admin-divider {
+    display: none;
+  }
+
+  .admin-home-btn span,
+  .admin-logout-btn span {
+    display: none;
+  }
+
+  .admin-home-btn,
+  .admin-logout-btn {
+    width: 38px;
+    padding: 0;
+  }
+
+  .admin-main {
+    padding: 22px 16px 35px;
+  }
+
+  .admin-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-page-heading h2 {
+    font-size: 24px;
+  }
+
+  .admin-dashboard-layout {
+    gap: 16px;
+  }
+
+  .admin-section-header,
+  .admin-sidebar-header {
+    padding: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header-inner {
+    padding: 0 13px;
+  }
+
+  .admin-main {
+    padding: 18px 10px 30px;
+  }
+
+  .admin-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .admin-brand-text h1 {
+    font-size: 16px;
+  }
+
+  .admin-page-heading h2 {
+    font-size: 22px;
+  }
+
+  .admin-status-indicator {
+    font-size: 11px;
+  }
+}

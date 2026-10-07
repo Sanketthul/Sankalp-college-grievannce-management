@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./AdminTable.css";
 
 function AdminTable({ setStats }) {
   const [complaints, setComplaints] = useState([]);
@@ -12,14 +13,11 @@ function AdminTable({ setStats }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
 
   const [selectedResolver, setSelectedResolver] = useState("");
-
   const [selectedStatus, setSelectedStatus] = useState("");
 
   const token = sessionStorage.getItem("token");
 
-  // =====================================================
-  // FETCH COMPLAINTS
-  // =====================================================
+  //fetch complaints
 
   const fetchComplaints = async () => {
     try {
@@ -54,10 +52,6 @@ function AdminTable({ setStats }) {
         throw new Error(data.message || "Unable to fetch complaints.");
       }
 
-      // -------------------------------------------------
-      // Make sure complaints is always an array
-      // -------------------------------------------------
-
       const complaintList = Array.isArray(data.complaints)
         ? data.complaints
         : Array.isArray(data)
@@ -66,22 +60,13 @@ function AdminTable({ setStats }) {
 
       setComplaints(complaintList);
 
-      // -------------------------------------------------
-      // Statistics
-      // -------------------------------------------------
-
       if (data.stats && typeof data.stats === "object") {
         setStats({
           total: Number(data.stats.total) || 0,
-
           pending: Number(data.stats.pending) || 0,
-
           inProgress: Number(data.stats.inProgress) || 0,
-
           resolved: Number(data.stats.resolved) || 0,
-
           rejected: Number(data.stats.rejected) || 0,
-
           assigned: Number(data.stats.assigned) || 0,
         });
       } else {
@@ -105,9 +90,7 @@ function AdminTable({ setStats }) {
     }
   };
 
-  // =====================================================
-  // FETCH RESOLVERS
-  // =====================================================
+  //fetch resolver
 
   const fetchResolvers = async () => {
     try {
@@ -128,16 +111,6 @@ function AdminTable({ setStats }) {
         throw new Error(data.message || "Unable to fetch resolvers.");
       }
 
-      // -------------------------------------------------
-      // Support both:
-      //
-      // [ resolver, resolver ]
-      //
-      // and:
-      //
-      // { resolvers: [ resolver, resolver ] }
-      // -------------------------------------------------
-
       let resolverList = [];
 
       if (Array.isArray(data)) {
@@ -156,18 +129,10 @@ function AdminTable({ setStats }) {
     }
   };
 
-  // =====================================================
-  // INITIAL LOAD / STATUS FILTER
-  // =====================================================
-
   useEffect(() => {
     fetchComplaints();
     fetchResolvers();
   }, [statusFilter]);
-
-  // =====================================================
-  // SEARCH
-  // =====================================================
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -177,9 +142,7 @@ function AdminTable({ setStats }) {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // =====================================================
-  // UPDATE COMPLAINT
-  // =====================================================
+  //update complaint
 
   const updateComplaint = async (complaintId, changes) => {
     try {
@@ -194,7 +157,6 @@ function AdminTable({ setStats }) {
 
           headers: {
             "Content-Type": "application/json",
-
             Authorization: `Bearer ${token}`,
           },
 
@@ -220,10 +182,6 @@ function AdminTable({ setStats }) {
     }
   };
 
-  // =====================================================
-  // OPEN DETAILS
-  // =====================================================
-
   const openDetails = (complaint) => {
     setSelectedComplaint(complaint);
 
@@ -232,232 +190,277 @@ function AdminTable({ setStats }) {
     setSelectedStatus(complaint.status || "Pending");
   };
 
-  // =====================================================
-  // RENDER
-  // =====================================================
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Resolved":
+        return "admin-status admin-status-resolved";
+
+      case "Rejected":
+        return "admin-status admin-status-rejected";
+
+      case "In Progress":
+        return "admin-status admin-status-progress";
+
+      default:
+        return "admin-status admin-status-pending";
+    }
+  };
 
   return (
-    <div className="w-full">
+    <div className="admin-table-container">
+      {/* PAGE HEADER */}
+
+      <div className="admin-table-heading">
+        <div>
+          <span className="admin-table-eyebrow">GRIEVANCE MANAGEMENT</span>
+
+          <h1>Complaint Details</h1>
+
+          <p>Search, review and manage student complaints.</p>
+        </div>
+      </div>
+
       {/* SEARCH + FILTER */}
 
-      <div className="bg-white shadow-sm border rounded-lg mx-2 mt-4 p-4">
-        <div className="flex flex-col md:flex-row gap-3">
+      <div className="admin-filter-card">
+        <div className="admin-search-wrapper">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.8"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.04 6.04a7.5 7.5 0 0 0 10.61 10.61Z"
+            />
+          </svg>
+
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by username, UID, complaint, branch or resolver..."
-            className="flex-1 border rounded-lg px-4 py-2 outline-none focus:border-purple-500"
           />
+        </div>
+
+        <div className="admin-filter-wrapper">
+          <label>Status</label>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border rounded-lg px-4 py-2 outline-none"
           >
             <option value="All">All Complaints</option>
-
             <option value="Pending">Pending</option>
-
             <option value="In Progress">In Progress</option>
-
             <option value="Resolved">Resolved</option>
-
             <option value="Rejected">Rejected</option>
           </select>
         </div>
       </div>
 
-      {/* TITLE */}
-
-      <div className="bg-gray-200 w-auto mt-4 mx-2 rounded-sm">
-        <h4 className="text-sm py-2 px-4">Complaint Details</h4>
-      </div>
-
       {/* TABLE */}
 
-      <div className="h-[75vh] overflow-auto rounded-lg border border-gray-300 shadow-sm m-2">
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500">Loading complaints...</p>
+      <div className="admin-table-card">
+        <div className="admin-table-topbar">
+          <div>
+            <h2>All Complaints</h2>
+
+            <p>
+              {loading
+                ? "Loading complaints..."
+                : `${complaints.length} complaint${
+                    complaints.length !== 1 ? "s" : ""
+                  } found`}
+            </p>
           </div>
-        ) : complaints.length === 0 ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500">No complaints found.</p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                <th className="px-4 py-4 font-medium text-gray-900">#</th>
+        </div>
 
-                <th className="px-4 py-4 font-medium text-gray-900">Student</th>
+        <div className="admin-table-scroll">
+          {loading ? (
+            <div className="admin-table-state">
+              <div className="admin-spinner"></div>
 
-                <th className="px-4 py-4 font-medium text-gray-900">
-                  Complaint ID
-                </th>
+              <p>Loading complaints...</p>
+            </div>
+          ) : complaints.length === 0 ? (
+            <div className="admin-table-state">
+              <div className="admin-empty-icon">📋</div>
 
-                <th className="px-4 py-4 font-medium text-gray-900">Branch</th>
+              <h3>No complaints found</h3>
 
-                <th className="px-4 py-4 font-medium text-gray-900">Status</th>
+              <p>Try changing your search or status filter.</p>
+            </div>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Student</th>
+                  <th>Complaint ID</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th>Resolver</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-                <th className="px-4 py-4 font-medium text-gray-900">
-                  Resolver
-                </th>
+              <tbody>
+                {complaints.map((complaint, index) => (
+                  <tr key={complaint._id || index}>
+                    <td>
+                      <span className="admin-row-number">{index + 1}</span>
+                    </td>
 
-                <th className="px-4 py-4 font-medium text-gray-900">Action</th>
-              </tr>
-            </thead>
+                    <td>
+                      <div className="admin-student-info">
+                        <strong>{complaint.username || "Unknown"}</strong>
 
-            <tbody className="divide-y divide-gray-100">
-              {Array.isArray(complaints) &&
-                complaints.map((complaint, index) => (
-                  <tr key={complaint._id || index} className="hover:bg-gray-50">
-                    <td className="px-4 py-4">{index + 1}</td>
-
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-gray-800">
-                        {complaint.username}
-                      </div>
-
-                      <div className="text-xs text-gray-400">
-                        UID: {complaint.uid}
+                        <span>UID: {complaint.uid || "N/A"}</span>
                       </div>
                     </td>
 
-                    <td className="px-4 py-4">
-                      <span className="text-xs text-green-600">
+                    <td>
+                      <span className="admin-complaint-id">
                         {complaint._id}
                       </span>
                     </td>
 
-                    <td className="px-4 py-4">{complaint.branch}</td>
+                    <td>
+                      <span className="admin-branch">
+                        {complaint.branch || "N/A"}
+                      </span>
+                    </td>
 
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                          complaint.status === "Resolved"
-                            ? "bg-green-100 text-green-700"
-                            : complaint.status === "Rejected"
-                              ? "bg-red-100 text-red-700"
-                              : complaint.status === "In Progress"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
+                    <td>
+                      <span className={getStatusClass(complaint.status)}>
                         {complaint.status || "Pending"}
                       </span>
                     </td>
 
-                    <td className="px-4 py-4">
-                      {complaint.assignedResolver || "Not assigned"}
+                    <td>
+                      {complaint.assignedResolver ? (
+                        <span className="admin-resolver">
+                          {complaint.assignedResolver}
+                        </span>
+                      ) : (
+                        <span className="admin-not-assigned">Not assigned</span>
+                      )}
                     </td>
 
-                    <td className="px-4 py-4">
+                    <td>
                       <button
                         onClick={() => openDetails(complaint)}
-                        className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs"
+                        className="admin-manage-button"
                       >
                         View / Manage
                       </button>
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
-        )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* DETAILS MODAL */}
 
       {selectedComplaint && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Complaint Details
-                </h2>
+        <div className="admin-modal-overlay">
+          <div className="admin-details-modal">
+            {/* MODAL HEADER */}
 
-                <button
-                  onClick={() => setSelectedComplaint(null)}
-                  className="text-gray-500 text-xl"
-                >
-                  ✕
-                </button>
+            <div className="admin-modal-header">
+              <div>
+                <span className="admin-modal-eyebrow">
+                  COMPLAINT MANAGEMENT
+                </span>
+
+                <h2>Complaint Details</h2>
+
+                <p>Review the complaint and update its assignment or status.</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">Username</p>
+              <button
+                onClick={() => setSelectedComplaint(null)}
+                className="admin-modal-close"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
 
-                  <p className="font-semibold">{selectedComplaint.username}</p>
+            {/* COMPLAINT INFORMATION */}
+
+            <div className="admin-details-section">
+              <div className="admin-details-grid">
+                <div className="admin-detail-item">
+                  <span>Username</span>
+                  <strong>{selectedComplaint.username || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-500">UID</p>
-
-                  <p className="font-semibold">{selectedComplaint.uid}</p>
+                <div className="admin-detail-item">
+                  <span>UID</span>
+                  <strong>{selectedComplaint.uid || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-500">Branch</p>
-
-                  <p className="font-semibold">{selectedComplaint.branch}</p>
+                <div className="admin-detail-item">
+                  <span>Branch</span>
+                  <strong>{selectedComplaint.branch || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-500">Incharge</p>
-
-                  <p className="font-semibold">
-                    {selectedComplaint.incharge_name || "N/A"}
-                  </p>
+                <div className="admin-detail-item">
+                  <span>Incharge</span>
+                  <strong>{selectedComplaint.incharge_name || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-500">Date</p>
-
-                  <p className="font-semibold">
-                    {selectedComplaint.date || "N/A"}
-                  </p>
+                <div className="admin-detail-item">
+                  <span>Date</span>
+                  <strong>{selectedComplaint.date || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <p className="text-xs text-gray-500">Time</p>
-
-                  <p className="font-semibold">
-                    {selectedComplaint.time || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <p className="text-xs text-gray-500 mb-1">Complaint</p>
-
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  {selectedComplaint.complaint}
+                <div className="admin-detail-item">
+                  <span>Time</span>
+                  <strong>{selectedComplaint.time || "N/A"}</strong>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-5">
-                <p className="text-xs text-gray-500 mb-1">Resolver Comments</p>
+            {/* COMPLAINT */}
 
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  {selectedComplaint.comments || "No comments yet."}
-                </div>
+            <div className="admin-detail-block">
+              <span>Complaint</span>
+
+              <div className="admin-detail-content">
+                {selectedComplaint.complaint || "No complaint details."}
               </div>
+            </div>
 
+            {/* COMMENTS */}
+
+            <div className="admin-detail-block">
+              <span>Resolver Comments</span>
+
+              <div className="admin-detail-content">
+                {selectedComplaint.comments || "No comments yet."}
+              </div>
+            </div>
+
+            {/* MANAGEMENT */}
+
+            <div className="admin-management-section">
               {/* RESOLVER */}
 
-              <div className="mt-5">
-                <label className="block text-sm font-semibold mb-2">
-                  Assign Resolver
-                </label>
+              <div className="admin-form-group">
+                <label>Assign Resolver</label>
 
                 <select
                   value={selectedResolver}
                   onChange={(e) => setSelectedResolver(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
                 >
                   <option value="">Unassigned</option>
 
@@ -467,19 +470,14 @@ function AdminTable({ setStats }) {
                         key={resolver._id || resolver.username}
                         value={resolver.username}
                       >
-                        {resolver.name || resolver.username}
-
-                        {" ("}
-
-                        {resolver.username}
-
-                        {")"}
+                        {resolver.name || resolver.username} (
+                        {resolver.username})
                       </option>
                     ))}
                 </select>
 
                 {Array.isArray(resolvers) && resolvers.length === 0 && (
-                  <p className="text-xs text-red-500 mt-2">
+                  <p className="admin-form-warning">
                     No Resolver accounts are currently registered.
                   </p>
                 )}
@@ -487,15 +485,12 @@ function AdminTable({ setStats }) {
 
               {/* STATUS */}
 
-              <div className="mt-5">
-                <label className="block text-sm font-semibold mb-2">
-                  Complaint Status
-                </label>
+              <div className="admin-form-group">
+                <label>Complaint Status</label>
 
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
                 >
                   <option value="Pending">Pending</option>
 
@@ -506,29 +501,29 @@ function AdminTable({ setStats }) {
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
+            </div>
 
-              {/* BUTTONS */}
+            {/* BUTTONS */}
 
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setSelectedComplaint(null)}
-                  className="px-5 py-2 rounded-lg border"
-                >
-                  Cancel
-                </button>
+            <div className="admin-modal-footer">
+              <button
+                onClick={() => setSelectedComplaint(null)}
+                className="admin-cancel-button"
+              >
+                Cancel
+              </button>
 
-                <button
-                  onClick={() =>
-                    updateComplaint(selectedComplaint._id, {
-                      assignedResolver: selectedResolver,
-                      status: selectedStatus,
-                    })
-                  }
-                  className="px-5 py-2 rounded-lg bg-purple-600 text-white font-semibold"
-                >
-                  Save Changes
-                </button>
-              </div>
+              <button
+                onClick={() =>
+                  updateComplaint(selectedComplaint._id, {
+                    assignedResolver: selectedResolver,
+                    status: selectedStatus,
+                  })
+                }
+                className="admin-save-button"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         </div>

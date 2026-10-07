@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import "./ResolverDashboard.css";
 
 function ResolverDashboard() {
   // =====================================================
@@ -7,7 +7,6 @@ function ResolverDashboard() {
   // =====================================================
 
   const token = sessionStorage.getItem("token");
-
   const username = sessionStorage.getItem("username") || "";
 
   // =====================================================
@@ -41,9 +40,7 @@ function ResolverDashboard() {
 
       if (!token) {
         setError("Authentication token is missing. Please login again.");
-
         setComplaints([]);
-
         return;
       }
 
@@ -63,22 +60,11 @@ function ResolverDashboard() {
         throw new Error(data.message || "Unable to fetch assigned complaints.");
       }
 
-      /*
-        Expected backend response:
-
-        {
-          success: true,
-          complaints: [...]
-        }
-      */
-
       if (Array.isArray(data.complaints)) {
         setComplaints(data.complaints);
       } else if (Array.isArray(data.data)) {
-        // Fallback in case your backend returns data[]
         setComplaints(data.data);
       } else if (Array.isArray(data)) {
-        // Fallback if backend directly returns an array
         setComplaints(data);
       } else {
         setComplaints([]);
@@ -144,13 +130,11 @@ function ResolverDashboard() {
     try {
       if (!token) {
         alert("Authentication token is missing. Please login again.");
-
         return;
       }
 
       if (!selectedComplaint) {
         alert("No complaint selected.");
-
         return;
       }
 
@@ -159,13 +143,11 @@ function ResolverDashboard() {
 
       if (!complaintId) {
         alert("Complaint ID is missing.");
-
         return;
       }
 
       if (!status) {
         alert("Please select a complaint status.");
-
         return;
       }
 
@@ -176,15 +158,12 @@ function ResolverDashboard() {
 
         headers: {
           "Content-Type": "application/json",
-
           Authorization: `Bearer ${token}`,
         },
 
         body: JSON.stringify({
           complaintID: complaintId,
-
           status: status,
-
           comments: comments,
         }),
       });
@@ -201,8 +180,6 @@ function ResolverDashboard() {
 
       closeStatusModal();
 
-      // Refresh dashboard
-      // immediately after update.
       await fetchComplaints();
     } catch (err) {
       console.error("Update complaint error:", err);
@@ -214,23 +191,25 @@ function ResolverDashboard() {
   };
 
   // =====================================================
-  // STATUS BADGE
+  // STATUS CLASS
   // =====================================================
 
   const getStatusClass = (complaintStatus) => {
-    switch (String(complaintStatus || "").toLowerCase()) {
+    const normalizedStatus = String(complaintStatus || "").toLowerCase();
+
+    switch (normalizedStatus) {
       case "resolved":
-        return "bg-green-100 text-green-700";
+        return "resolver-status resolver-status-resolved";
 
       case "rejected":
-        return "bg-red-100 text-red-700";
+        return "resolver-status resolver-status-rejected";
 
       case "in progress":
-        return "bg-blue-100 text-blue-700";
+        return "resolver-status resolver-status-progress";
 
       case "pending":
       default:
-        return "bg-yellow-100 text-yellow-700";
+        return "resolver-status resolver-status-pending";
     }
   };
 
@@ -240,74 +219,170 @@ function ResolverDashboard() {
 
   const logout = () => {
     sessionStorage.removeItem("token");
-
     sessionStorage.removeItem("username");
-
     sessionStorage.removeItem("role");
-
     sessionStorage.removeItem("uid");
-
     sessionStorage.removeItem("name");
 
     window.location.href = "/login";
   };
 
   // =====================================================
+  // STATISTICS
+  // =====================================================
+
+  const totalComplaints = complaints.length;
+
+  const pendingComplaints = complaints.filter(
+    (complaint) =>
+      String(complaint.status || "Pending").toLowerCase() === "pending",
+  ).length;
+
+  const inProgressComplaints = complaints.filter(
+    (complaint) =>
+      String(complaint.status || "").toLowerCase() === "in progress",
+  ).length;
+
+  const resolvedComplaints = complaints.filter(
+    (complaint) => String(complaint.status || "").toLowerCase() === "resolved",
+  ).length;
+
+  // =====================================================
   // RENDER
   // =====================================================
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="resolver-dashboard">
       {/* =================================================
-          NAVBAR
+          HEADER
       ================================================= */}
 
-      <nav className="bg-indigo-700 text-white px-6 py-4 shadow">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">SANKALP</h1>
-
-            <p className="text-sm text-indigo-200">Resolver Dashboard</p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <span className="text-sm">Welcome, {username}</span>
-
-            <button
-              onClick={logout}
-              className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-
       {/* =================================================
-          MAIN CONTENT
+          MAIN
       ================================================= */}
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* HEADER */}
+      <main className="resolver-main">
+        {/* =================================================
+            PAGE HEADER
+        ================================================= */}
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="resolver-page-header">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">
-              Assigned Complaints
-            </h2>
+            <span className="resolver-eyebrow">RESOLVER DASHBOARD</span>
 
-            <p className="text-gray-500 mt-1">
-              Complaints assigned to you by the administrator.
+            <h2>Assigned Complaints</h2>
+
+            <p>
+              Review and manage complaints assigned to you by the administrator.
             </p>
           </div>
 
           <button
+            type="button"
             onClick={fetchComplaints}
             disabled={loading}
-            className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            className="resolver-refresh-button"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 12a7.5 7.5 0 0112.75-5.303L19.5 9m0-6v6h-6M19.5 12a7.5 7.5 0 01-12.75 5.303L4.5 15m0 6v-6h6"
+              />
+            </svg>
+
             {loading ? "Refreshing..." : "Refresh"}
           </button>
+        </div>
+
+        {/* =================================================
+            SUMMARY
+        ================================================= */}
+
+        <div className="resolver-summary">
+          {/* TOTAL */}
+
+          <div className="resolver-summary-card">
+            <div className="resolver-summary-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <span>TOTAL ASSIGNED</span>
+
+              <strong>{totalComplaints}</strong>
+            </div>
+          </div>
+
+          {/* IN PROGRESS */}
+
+          <div className="resolver-summary-card">
+            <div className="resolver-summary-icon progress-summary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <span>IN PROGRESS</span>
+
+              <strong>{inProgressComplaints}</strong>
+            </div>
+          </div>
+
+          {/* RESOLVED */}
+
+          <div className="resolver-summary-card">
+            <div className="resolver-summary-icon resolved-summary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75l2.25 2.25L15 11.25m6 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <span>RESOLVED</span>
+
+              <strong>{resolvedComplaints}</strong>
+            </div>
+          </div>
         </div>
 
         {/* =================================================
@@ -315,144 +390,165 @@ function ResolverDashboard() {
         ================================================= */}
 
         {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
+          <div className="resolver-error">
+            <strong>Unable to load complaints</strong>
+
+            <span>{error}</span>
           </div>
         )}
 
         {/* =================================================
-            LOADING
+            COMPLAINT TABLE
         ================================================= */}
 
         {loading ? (
-          <div className="bg-white rounded-xl shadow p-10 text-center">
-            <p className="text-gray-500">Loading assigned complaints...</p>
+          <div className="resolver-state-card">
+            <div className="resolver-loader"></div>
+
+            <h3>Loading assigned complaints</h3>
+
+            <p>Please wait while your complaints are loaded.</p>
           </div>
         ) : complaints.length === 0 ? (
-          /* =================================================
-             NO COMPLAINTS
-          ================================================= */
+          <div className="resolver-state-card">
+            <div className="resolver-empty-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.7"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
 
-          <div className="bg-white rounded-xl shadow p-10 text-center">
-            <h3 className="text-xl font-semibold text-gray-700">
-              No complaints assigned
-            </h3>
+            <h3>No complaints assigned</h3>
 
-            <p className="text-gray-500 mt-2">
-              Complaints assigned to you by the admin will appear here.
+            <p>
+              Complaints assigned to you by the administrator will appear here.
             </p>
           </div>
         ) : (
-          /* =================================================
-             COMPLAINT TABLE
-          ================================================= */
+          <div className="resolver-table-card">
+            {/* TABLE HEADER */}
 
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+            <div className="resolver-table-header">
+              <div>
+                <span>WORK QUEUE</span>
+
+                <h3>Assigned Complaints</h3>
+              </div>
+
+              <span className="resolver-count">
+                {totalComplaints}{" "}
+                {totalComplaints === 1 ? "Complaint" : "Complaints"}
+              </span>
+            </div>
+
+            {/* TABLE */}
+
+            <div className="resolver-table-wrapper">
+              <table className="resolver-table">
+                <thead>
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      #
-                    </th>
+                    <th>#</th>
 
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      Complaint
-                    </th>
+                    <th>Complaint</th>
 
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      Student
-                    </th>
+                    <th>Student</th>
 
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      UID
-                    </th>
+                    <th>UID</th>
 
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      Status
-                    </th>
+                    <th>Status</th>
 
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                      Date
-                    </th>
+                    <th>Date</th>
 
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
-                      Action
-                    </th>
+                    <th>Action</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y">
+                <tbody>
                   {Array.isArray(complaints) &&
                     complaints.map((complaint, index) => (
-                      <tr
-                        key={complaint._id || index}
-                        className="hover:bg-gray-50"
-                      >
+                      <tr key={complaint._id || index}>
                         {/* NUMBER */}
 
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {index + 1}
+                        <td>
+                          <span className="resolver-number">{index + 1}</span>
                         </td>
 
                         {/* COMPLAINT */}
 
-                        <td className="px-6 py-4">
-                          <div className="max-w-xs">
-                            <p className="font-semibold text-gray-800">
+                        <td>
+                          <div className="resolver-complaint">
+                            <strong>
                               {complaint.subject ||
                                 complaint.title ||
                                 "Complaint"}
-                            </p>
+                            </strong>
 
-                            <p className="text-sm text-gray-500 truncate">
+                            <p>
                               {complaint.complaint ||
                                 complaint.description ||
-                                "No description"}
+                                "No description available."}
                             </p>
                           </div>
                         </td>
 
                         {/* STUDENT */}
 
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {complaint.name || complaint.studentName || "N/A"}
+                        <td>
+                          <span className="resolver-student">
+                            {complaint.name ||
+                              complaint.studentName ||
+                              complaint.username ||
+                              "N/A"}
+                          </span>
                         </td>
 
                         {/* UID */}
 
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {complaint.uid || complaint.studentUid || "N/A"}
+                        <td>
+                          <span className="resolver-uid">
+                            {complaint.uid || complaint.studentUid || "N/A"}
+                          </span>
                         </td>
 
                         {/* STATUS */}
 
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(
-                              complaint.status,
-                            )}`}
-                          >
+                        <td>
+                          <span className={getStatusClass(complaint.status)}>
                             {complaint.status || "Pending"}
                           </span>
                         </td>
 
                         {/* DATE */}
 
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {complaint.createdAt
-                            ? new Date(complaint.createdAt).toLocaleDateString()
-                            : "N/A"}
+                        <td>
+                          <span className="resolver-date">
+                            {complaint.createdAt
+                              ? new Date(
+                                  complaint.createdAt,
+                                ).toLocaleDateString()
+                              : complaint.date || "N/A"}
+                          </span>
                         </td>
 
                         {/* ACTION */}
 
-                        <td className="px-6 py-4 text-center">
+                        <td>
                           <button
+                            type="button"
                             onClick={() => openStatusModal(complaint)}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700"
+                            className="resolver-update-button"
                           >
                             Update
+                            <span>→</span>
                           </button>
                         </td>
                       </tr>
@@ -469,33 +565,37 @@ function ResolverDashboard() {
       ================================================= */}
 
       {statusModal && selectedComplaint && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+        <div className="resolver-modal-overlay">
+          <div className="resolver-modal">
             {/* MODAL HEADER */}
 
-            <div className="px-6 py-4 border-b flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-800">
-                Update Complaint
-              </h3>
+            <div className="resolver-modal-header">
+              <div>
+                <span>COMPLAINT MANAGEMENT</span>
+
+                <h3>Update Complaint</h3>
+
+                <p>Update the status and add resolution details.</p>
+              </div>
 
               <button
+                type="button"
                 onClick={closeStatusModal}
                 disabled={updating}
-                className="text-gray-500 hover:text-gray-800 text-2xl"
+                className="resolver-modal-close"
+                aria-label="Close modal"
               >
                 ×
               </button>
             </div>
 
-            {/* MODAL BODY */}
+            {/* MODAL FORM */}
 
-            <form onSubmit={updateComplaint} className="p-6">
+            <form onSubmit={updateComplaint} className="resolver-modal-form">
               {/* COMPLAINT ID */}
 
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Complaint ID
-                </label>
+              <div className="resolver-form-group">
+                <label>Complaint ID</label>
 
                 <input
                   type="text"
@@ -503,21 +603,29 @@ function ResolverDashboard() {
                     selectedComplaint._id || selectedComplaint.complaintID || ""
                   }
                   readOnly
-                  className="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
                 />
+              </div>
+
+              {/* COMPLAINT PREVIEW */}
+
+              <div className="resolver-complaint-preview">
+                <span>COMPLAINT</span>
+
+                <p>
+                  {selectedComplaint.complaint ||
+                    selectedComplaint.description ||
+                    "No complaint description available."}
+                </p>
               </div>
 
               {/* STATUS */}
 
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Complaint Status
-                </label>
+              <div className="resolver-form-group">
+                <label>Complaint Status</label>
 
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 outline-none"
                   required
                 >
                   <option value="">Select Status</option>
@@ -534,28 +642,25 @@ function ResolverDashboard() {
 
               {/* COMMENTS */}
 
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Comments / Resolution Details
-                </label>
+              <div className="resolver-form-group">
+                <label>Comments / Resolution Details</label>
 
                 <textarea
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
                   rows="5"
                   placeholder="Enter your comments or resolution details..."
-                  className="w-full border rounded-lg px-3 py-2 outline-none resize-none"
                 />
               </div>
 
               {/* BUTTONS */}
 
-              <div className="flex justify-end gap-3">
+              <div className="resolver-modal-actions">
                 <button
                   type="button"
                   onClick={closeStatusModal}
                   disabled={updating}
-                  className="px-5 py-2 rounded-lg border text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  className="resolver-cancel-button"
                 >
                   Cancel
                 </button>
@@ -563,7 +668,7 @@ function ResolverDashboard() {
                 <button
                   type="submit"
                   disabled={updating}
-                  className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                  className="resolver-save-button"
                 >
                   {updating ? "Updating..." : "Update Complaint"}
                 </button>

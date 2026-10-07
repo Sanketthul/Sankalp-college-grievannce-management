@@ -8,10 +8,6 @@ function PrivateRoute({ children, allowedRole }) {
 
   const role = sessionStorage.getItem("role");
 
-  // =====================================================
-  // NOT LOGGED IN
-  // =====================================================
-
   if (!token) {
     return (
       <Navigate
@@ -24,19 +20,11 @@ function PrivateRoute({ children, allowedRole }) {
     );
   }
 
-  // =====================================================
-  // ROLE NOT FOUND
-  // =====================================================
-
   if (!role) {
     sessionStorage.clear();
 
     return <Navigate to="/login" replace />;
   }
-
-  // =====================================================
-  // WRONG ROLE
-  // =====================================================
 
   if (allowedRole && role !== allowedRole) {
     if (role === "Admin") {
@@ -55,10 +43,6 @@ function PrivateRoute({ children, allowedRole }) {
 
     return <Navigate to="/login" replace />;
   }
-
-  // =====================================================
-  // ACCESS GRANTED
-  // =====================================================
 
   return children;
 }

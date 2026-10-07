@@ -10,7 +10,6 @@ function SideNav(props) {
   const [newUserName, setNewUserName] = useState();
   const [newPass, setNewPass] = useState();
 
-
   var newUserData = {
     oldUsername: oldUsername,
     newUsername: newUserName,
@@ -107,7 +106,10 @@ function SideNav(props) {
       )}
 
       <div className="absolute right-0 bg-violet-600 shadow-lg shadow-violet-50 m-2 p-6 w-1/6 rounded-md border border-gray-100">
-        <p className="text-white"> Username: <span className="font-bold">{props.uname}</span></p>
+        <p className="text-white">
+          {" "}
+          Username: <span className="font-bold">{props.uname}</span>
+        </p>
         <span className="text-white">Update Userdetail</span>
         <button
           onClick={() => openProfileModal(true)}
@@ -129,10 +131,10 @@ function SideNav(props) {
           </svg>
         </button>
         <Link to="/">
-        <button className="bg-white px-3 py-1 mt-2 rounded-full text-red-500 font-bold text-sm" >
-          logout
-        </button>
-        </Link> 
+          <button className="bg-white px-3 py-1 mt-2 rounded-full text-red-500 font-bold text-sm">
+            logout
+          </button>
+        </Link>
       </div>
     </>
   );

@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import AdminTable from "./AdminTable";
 import SideDash from "./SideDash";
-import Container from "react-bootstrap/Container";
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import "./AdminDashboard.css";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -18,7 +16,7 @@ function AdminDashboard() {
     assigned: 0,
   });
 
-  const currUsername = sessionStorage.getItem("username");
+  const currUsername = sessionStorage.getItem("username") || "Admin";
 
   const logout = () => {
     sessionStorage.clear();
@@ -26,48 +24,45 @@ function AdminDashboard() {
   };
 
   return (
-    <>
-      <Navbar
-        style={{
-          padding: "10px",
-          backgroundColor: "#8338ec",
-        }}
-        collapseOnSelect
-        expand="lg"
-        variant="dark"
-        className="shadow-sm"
-      >
-        <Container>
-          <Navbar.Brand>SANKALP</Navbar.Brand>
+    <div className="admin-dashboard">
+      {/* =========================================
+          ADMIN HEADER
+      ========================================= */}
 
-          <Navbar.Toggle />
+      {/* =========================================
+          PAGE CONTENT
+      ========================================= */}
 
-          <Navbar.Collapse>
-            <Nav className="me-auto" />
+      <main className="admin-main">
+        {/* Page Heading */}
 
-            <Nav className="items-center">
-              <Nav.Link href="/">Home</Nav.Link>
+        {/* =========================================
+            DASHBOARD LAYOUT
+        ========================================= */}
 
-              <button onClick={logout} className="text-white px-3 py-2">
-                Logout
-              </button>
+        <div className="admin-dashboard-layout">
+          {/* Main Complaint Table */}
 
-              <p className="mt-2 ml-2 text-white">
-                Welcome, <span className="font-bold">Admin</span>
-              </p>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+          <section className="admin-table-section">
+            <div className="admin-table-container">
+              <AdminTable stats={stats} setStats={setStats} />
+            </div>
+          </section>
 
-      <div className="w-full flex flex-col lg:flex-row">
-        <div className="w-full lg:w-4/5">
-          <AdminTable stats={stats} setStats={setStats} />
+          {/* Statistics Sidebar */}
+
+          <aside className="admin-sidebar">
+            <div className="admin-sidebar-header">
+              <span className="admin-section-label">OVERVIEW</span>
+
+              <h3>Complaint Statistics</h3>
+            </div>
+
+            <SideDash stats={stats} />
+          </aside>
         </div>
-
-        <SideDash stats={stats} />
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
 
