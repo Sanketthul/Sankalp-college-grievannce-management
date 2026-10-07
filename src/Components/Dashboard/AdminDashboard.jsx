@@ -16,29 +16,10 @@ function AdminDashboard() {
     assigned: 0,
   });
 
-  const currUsername = sessionStorage.getItem("username") || "Admin";
-
-  const logout = () => {
-    sessionStorage.clear();
-    navigate("/login");
-  };
-
   return (
     <div className="admin-dashboard">
-      {/* =========================================
-          ADMIN HEADER
-      ========================================= */}
-
-      {/* =========================================
-          PAGE CONTENT
-      ========================================= */}
-
       <main className="admin-main">
         {/* Page Heading */}
-
-        {/* =========================================
-            DASHBOARD LAYOUT
-        ========================================= */}
 
         <div className="admin-dashboard-layout">
           {/* Main Complaint Table */}

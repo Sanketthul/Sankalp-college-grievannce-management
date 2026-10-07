@@ -61,6 +61,10 @@ function ResolverDashboard() {
 
   useEffect(() => {
     fetchComplaints();
+
+    // fetchComplaints is intentionally excluded because it is
+    // recreated on each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openStatusModal = (complaint) => {
@@ -87,8 +91,7 @@ function ResolverDashboard() {
     setComments("");
   };
 
-  //update complaint
-
+  // update complaint
   const updateComplaint = async (e) => {
     e.preventDefault();
 
@@ -155,8 +158,7 @@ function ResolverDashboard() {
     }
   };
 
-  //status class
-
+  // status class
   const getStatusClass = (complaintStatus) => {
     const normalizedStatus = String(complaintStatus || "").toLowerCase();
 
@@ -176,26 +178,8 @@ function ResolverDashboard() {
     }
   };
 
-  //logout
-
-  const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("role");
-    sessionStorage.removeItem("uid");
-    sessionStorage.removeItem("name");
-
-    window.location.href = "/login";
-  };
-
-  //stats
-
+  // stats
   const totalComplaints = complaints.length;
-
-  const pendingComplaints = complaints.filter(
-    (complaint) =>
-      String(complaint.status || "Pending").toLowerCase() === "pending",
-  ).length;
 
   const inProgressComplaints = complaints.filter(
     (complaint) =>

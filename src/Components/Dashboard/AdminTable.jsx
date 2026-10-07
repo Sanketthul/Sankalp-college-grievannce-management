@@ -17,8 +17,7 @@ function AdminTable({ setStats }) {
 
   const token = sessionStorage.getItem("token");
 
-  //fetch complaints
-
+  // fetch complaints
   const fetchComplaints = async () => {
     try {
       setLoading(true);
@@ -90,8 +89,7 @@ function AdminTable({ setStats }) {
     }
   };
 
-  //fetch resolver
-
+  // fetch resolver
   const fetchResolvers = async () => {
     try {
       if (!token) {
@@ -132,6 +130,10 @@ function AdminTable({ setStats }) {
   useEffect(() => {
     fetchComplaints();
     fetchResolvers();
+
+    // fetchComplaints and fetchResolvers are intentionally
+    // excluded because they are recreated on each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   useEffect(() => {
@@ -140,10 +142,13 @@ function AdminTable({ setStats }) {
     }, 400);
 
     return () => clearTimeout(timer);
+
+    // fetchComplaints is intentionally excluded because it
+    // is recreated on each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
-  //update complaint
-
+  // update complaint
   const updateComplaint = async (complaintId, changes) => {
     try {
       if (!token) {
