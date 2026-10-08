@@ -8,7 +8,6 @@ function Dahboard() {
   const [userDetail] = useState(false);
 
   const currUsername = sessionStorage.getItem("username") || "Student";
-  const uid = sessionStorage.getItem("uid") || "";
 
   return (
     <div className="student-dashboard">
