@@ -62,13 +62,16 @@ function Register() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        process.env.NODE_ENV === "development" ? "/register" : "/api/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
         },
-        body: JSON.stringify(formData),
-      });
+      );
 
       const data = await response.json();
 
@@ -129,7 +132,6 @@ function Register() {
 
             <div className="register-login-box">
               <p>Already have an account?</p>
-
               <Link to="/login">Login to your account</Link>
             </div>
           </div>
@@ -145,7 +147,6 @@ function Register() {
             {/* MOBILE LOGO */}
             <div className="register-mobile-logo">
               <div className="register-logo">S</div>
-
               <span>SANKALP</span>
             </div>
 
@@ -183,15 +184,12 @@ function Register() {
                       strokeLinejoin="round"
                       d="M15 19a6 6 0 00-12 0"
                     />
-
                     <circle cx="9" cy="7" r="4" />
-
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M17 11a4 4 0 100-8"
                     />
-
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -207,11 +205,8 @@ function Register() {
                     required
                   >
                     <option value="">Select your role</option>
-
                     <option value="Student">Student</option>
-
                     <option value="Resolver">Resolver</option>
-
                     <option value="Admin">Admin</option>
                   </select>
                 </div>
@@ -232,7 +227,6 @@ function Register() {
                       strokeWidth="1.8"
                     >
                       <rect x="4" y="10" width="16" height="11" rx="2" />
-
                       <path strokeLinecap="round" d="M8 10V7a4 4 0 018 0v3" />
                     </svg>
 
@@ -276,7 +270,6 @@ function Register() {
                       strokeWidth="1.8"
                     >
                       <rect x="4" y="10" width="16" height="11" rx="2" />
-
                       <path strokeLinecap="round" d="M8 10V7a4 4 0 018 0v3" />
                     </svg>
 
@@ -354,7 +347,6 @@ function Register() {
                     strokeWidth="1.8"
                   >
                     <rect x="3" y="5" width="18" height="14" rx="2" />
-
                     <path
                       strokeLinecap="round"
                       d="M7 9h.01M11 9h6M7 13h10M7 17h5"
@@ -387,7 +379,6 @@ function Register() {
                     strokeWidth="1.8"
                   >
                     <circle cx="12" cy="8" r="4" />
-
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -422,7 +413,6 @@ function Register() {
                     strokeWidth="1.8"
                   >
                     <rect x="4" y="10" width="16" height="11" rx="2" />
-
                     <path strokeLinecap="round" d="M8 10V7a4 4 0 018 0v3" />
                   </svg>
 
@@ -470,7 +460,6 @@ function Register() {
                       strokeLinejoin="round"
                       d="M5 12h14"
                     />
-
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -484,7 +473,6 @@ function Register() {
             {/* MOBILE LOGIN */}
             <div className="register-mobile-login">
               <span>Already have an account?</span>
-
               <Link to="/login">Login</Link>
             </div>
           </div>

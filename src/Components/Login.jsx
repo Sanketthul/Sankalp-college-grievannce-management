@@ -12,7 +12,7 @@ function Login() {
   function onSubmit(e) {
     e.preventDefault();
 
-    fetch("/api/login", {
+    fetch(process.env.NODE_ENV === "development" ? "/login" : "/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -94,15 +94,12 @@ function Login() {
           <div className="auth-form-wrapper">
             <div className="auth-mobile-logo">
               <div className="auth-logo">S</div>
-
               <span>SANKALP</span>
             </div>
 
             <div className="auth-heading">
               <p className="auth-eyebrow">WELCOME BACK</p>
-
               <h2>Sign in to your account</h2>
-
               <p>Enter your credentials to continue.</p>
             </div>
 
@@ -125,7 +122,6 @@ function Login() {
                       strokeLinejoin="round"
                       d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
                     />
-
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -159,7 +155,6 @@ function Login() {
                     strokeWidth="1.8"
                   >
                     <rect x="4" y="10" width="16" height="11" rx="2" />
-
                     <path strokeLinecap="round" d="M8 10V7a4 4 0 018 0v3" />
                   </svg>
 
@@ -202,7 +197,6 @@ function Login() {
                     strokeLinejoin="round"
                     d="M5 12h14"
                   />
-
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -214,7 +208,6 @@ function Login() {
 
             <div className="auth-register">
               <span>Don't have an account?</span>
-
               <Link to="/register">Create an account</Link>
             </div>
           </div>

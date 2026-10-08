@@ -25,25 +25,20 @@ if (!process.env.RESOLVER_SECRET_KEY) {
 }
 
 const PORT = process.env.PORT || 8000;
-
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
-// validation
-
+// Validation
 const {
   validate,
   registerValidation,
   loginValidation,
 } = require("./Middleware/validation");
 
-// cors
-
+// CORS
 app.use(
   cors({
     origin: CLIENT_URL,
-
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
@@ -56,8 +51,18 @@ app.use(
   }),
 );
 
-// database
+// Handle requests using /api routes.
+// For example, /api/login becomes /login,
+// and /api/history becomes /history.
+app.use((req, res, next) => {
+  if (req.url === "/api" || req.url.startsWith("/api/")) {
+    req.url = req.url.replace(/^\/api(?=\/|$)/, "");
+  }
 
+  next();
+});
+
+// Database connection
 mongoose
   .connect(process.env.DBURL)
   .then(() => {
@@ -67,14 +72,11 @@ mongoose
     console.error("Database connection failed:", error.message);
   });
 
-// models
-
+// Models
 const user_model = require("./Model/register");
-
 const Complaint_model = require("./Model/complaint");
 
-// auth middleware
-
+// Authentication middleware
 const {
   authenticateToken,
   requireAdmin,
@@ -82,246 +84,181 @@ const {
   requireStudent,
 } = require("./Middleware/auth");
 
-// complaint routes
-
+// Complaint routes
 const ComplaintRoutes = require("./Routes/complaints");
 
 app.use("/", ComplaintRoutes);
 
-// registration
+// Registration
+app.post("/register", registerValidation, validate, async (req, res) => {
+  try {
+    const {
+      username,
+      password,
+      role,
+      name,
+      email,
+      uid,
+      adminSecret,
+      adminSecretKey,
+      resolverSecret,
+      resolverSecretKey,
+      pass,
+    } = req.body;
 
-app.post(
-  "/register",
+    const finalPassword = password || pass;
 
-  registerValidation,
+    if (role === "Admin") {
+      const suppliedAdminSecret = adminSecretKey || adminSecret;
 
-  validate,
-
-  async (req, res) => {
-    try {
-      const {
-        username,
-        password,
-        role,
-        name,
-        email,
-        uid,
-        adminSecret,
-        adminSecretKey,
-        resolverSecret,
-        resolverSecretKey,
-        pass,
-      } = req.body;
-
-      const finalPassword = password || pass;
-
-      if (role === "Admin") {
-        const suppliedAdminSecret = adminSecretKey || adminSecret;
-
-        if (suppliedAdminSecret !== process.env.ADMIN_SECRET_KEY) {
-          return res.status(403).json({
-            success: false,
-
-            message: "Invalid Admin Secret Key.",
-          });
-        }
-      }
-
-      if (role === "Resolver") {
-        const suppliedResolverSecret = resolverSecretKey || resolverSecret;
-
-        if (suppliedResolverSecret !== process.env.RESOLVER_SECRET_KEY) {
-          return res.status(403).json({
-            success: false,
-
-            message: "Invalid Resolver Secret Key.",
-          });
-        }
-      }
-
-      const existingUser = await user_model.findOne({
-        $or: [
-          {
-            username: username,
-          },
-
-          {
-            email: email,
-          },
-
-          {
-            uid: uid,
-          },
-        ],
-      });
-
-      if (existingUser) {
-        return res.status(409).json({
+      if (suppliedAdminSecret !== process.env.ADMIN_SECRET_KEY) {
+        return res.status(403).json({
           success: false,
-
-          message: "Username, email or UID already exists.",
+          message: "Invalid Admin Secret Key.",
         });
       }
+    }
 
-      const hashedPassword = await bcrypt.hash(finalPassword, 10);
+    if (role === "Resolver") {
+      const suppliedResolverSecret = resolverSecretKey || resolverSecret;
 
-      const newUser = new user_model({
-        username: username.trim(),
+      if (suppliedResolverSecret !== process.env.RESOLVER_SECRET_KEY) {
+        return res.status(403).json({
+          success: false,
+          message: "Invalid Resolver Secret Key.",
+        });
+      }
+    }
 
-        password: hashedPassword,
+    const existingUser = await user_model.findOne({
+      $or: [{ username: username }, { email: email }, { uid: uid }],
+    });
 
-        role: role.trim(),
-
-        name: name.trim(),
-
-        email: email.trim().toLowerCase(),
-
-        uid: uid.trim(),
-      });
-
-      await newUser.save();
-
-      return res.status(200).json({
-        success: true,
-
-        message: "Registration successful.",
-      });
-    } catch (error) {
-      console.error("Registration error:", error);
-
-      return res.status(500).json({
+    if (existingUser) {
+      return res.status(409).json({
         success: false,
-
-        message: "Unable to register user.",
+        message: "Username, email or UID already exists.",
       });
     }
-  },
-);
 
-// login
+    const hashedPassword = await bcrypt.hash(finalPassword, 10);
 
-app.post(
-  "/login",
+    const newUser = new user_model({
+      username: username.trim(),
+      password: hashedPassword,
+      role: role.trim(),
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      uid: uid.trim(),
+    });
 
-  loginValidation,
+    await newUser.save();
 
-  validate,
+    return res.status(200).json({
+      success: true,
+      message: "Registration successful.",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
 
-  async (req, res) => {
-    try {
-      const { uname, pass } = req.body;
+    return res.status(500).json({
+      success: false,
+      message: "Unable to register user.",
+    });
+  }
+});
 
-      const username = uname.trim();
+// Login
+app.post("/login", loginValidation, validate, async (req, res) => {
+  try {
+    const { uname, pass } = req.body;
 
-      const doc = await user_model.findOne({
-        username: username,
-      });
+    const username = uname.trim();
 
-      if (!doc) {
-        return res.status(401).json({
-          success: false,
+    const doc = await user_model.findOne({
+      username: username,
+    });
 
-          message: "Invalid username or password.",
-        });
-      }
-
-      const passwordMatch = await bcrypt.compare(pass, doc.password);
-
-      if (!passwordMatch) {
-        return res.status(401).json({
-          success: false,
-
-          message: "Invalid username or password.",
-        });
-      }
-
-      // create JWT
-
-      const token = jwt.sign(
-        {
-          userId: doc._id.toString(),
-
-          username: doc.username,
-
-          uid: doc.uid,
-
-          role: doc.role,
-        },
-
-        process.env.JWT_SECRET,
-
-        {
-          expiresIn: "2h",
-        },
-      );
-
-      return res.status(200).json({
-        success: true,
-
-        message: "Login successful.",
-
-        token,
-
-        user: {
-          username: doc.username,
-
-          name: doc.name,
-
-          uid: doc.uid,
-
-          role: doc.role,
-        },
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-
-      return res.status(500).json({
+    if (!doc) {
+      return res.status(401).json({
         success: false,
-
-        message: "Server error during login.",
+        message: "Invalid username or password.",
       });
     }
-  },
-);
+
+    const passwordMatch = await bcrypt.compare(pass, doc.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password.",
+      });
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      {
+        userId: doc._id.toString(),
+        username: doc.username,
+        uid: doc.uid,
+        role: doc.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "2h",
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful.",
+      token,
+      user: {
+        username: doc.username,
+        name: doc.name,
+        uid: doc.uid,
+        role: doc.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error during login.",
+    });
+  }
+});
 
 // Student history
+app.get("/history", authenticateToken, requireStudent, async (req, res) => {
+  try {
+    const data = await Complaint_model.find({
+      uid: req.user.uid,
+    }).sort({
+      createdAt: -1,
+    });
 
-app.get(
-  "/history",
+    return res.status(200).json({
+      success: true,
+      data: data,
+    });
+  } catch (error) {
+    console.error("History error:", error);
 
-  authenticateToken,
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch complaint history.",
+    });
+  }
+});
 
-  requireStudent,
-
-  async (req, res) => {
-    try {
-      const data = await Complaint_model.find({
-        uid: req.user.uid,
-      }).sort({
-        createdAt: -1,
-      });
-
-      return res.status(200).json({
-        success: true,
-
-        data: data,
-      });
-    } catch (error) {
-      console.error("History error:", error);
-
-      return res.status(500).json({
-        success: false,
-
-        message: "Unable to fetch complaint history.",
-      });
-    }
-  },
-);
-
+// Error handler
 const errorHandler = require("./Middleware/errorHandler");
 
 app.use(errorHandler);
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
