@@ -5,7 +5,7 @@ import ComplaintHistory from "./ComplaintHistory";
 import "./Dashboard.css";
 
 function Dahboard() {
-  const [userDetail, setUserDetail] = useState(false);
+  const [userDetail] = useState(false);
 
   const currUsername = sessionStorage.getItem("username") || "Student";
   const uid = sessionStorage.getItem("uid") || "";

@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import AdminTable from "./AdminTable";
 import SideDash from "./SideDash";
-import { useNavigate } from "react-router-dom";
+
 import "./AdminDashboard.css";
 
 function AdminDashboard() {
-  const navigate = useNavigate();
-
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
